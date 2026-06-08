@@ -54,7 +54,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const navItems = (!profile?.approved && primaryRole !== "admin")
     ? []
     : primaryRole === "restaurant"
-    ? [{ to: "/app", label: "Panel" }, { to: "/restaurant/menu", label: "Menü" }, { to: "/restaurant/orders", label: "Siparişler" }, { to: "/restaurant/campaigns", label: "Kampanyalar" }]
+    ? [{ to: "/app", label: "Panel" }, { to: "/restaurant/menu", label: "Menü" }, { to: "/restaurant/orders", label: "Siparişler" }, { to: "/restaurant/campaigns", label: "Kampanyalar" }, { to: "/restaurant/accounting", label: "Ciro ve Raporlar" }]
     : primaryRole === "manager"
     ? [{ to: "/app", label: "Panel" }, { to: "/restaurants", label: "Lokantalar" }, { to: "/campaigns", label: "Kampanyalar" }, { to: "/manager/team", label: "Ekip" }]
     : primaryRole === "admin"

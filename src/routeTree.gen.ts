@@ -20,6 +20,7 @@ import { Route as RestaurantsIdRouteImport } from './routes/restaurants.$id'
 import { Route as RestaurantOrdersRouteImport } from './routes/restaurant.orders'
 import { Route as RestaurantMenuRouteImport } from './routes/restaurant.menu'
 import { Route as RestaurantCampaignsRouteImport } from './routes/restaurant.campaigns'
+import { Route as RestaurantAccountingRouteImport } from './routes/restaurant.accounting'
 import { Route as ManagerTeamRouteImport } from './routes/manager.team'
 import { Route as AdminApprovalsRouteImport } from './routes/admin.approvals'
 
@@ -78,6 +79,11 @@ const RestaurantCampaignsRoute = RestaurantCampaignsRouteImport.update({
   path: '/restaurant/campaigns',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RestaurantAccountingRoute = RestaurantAccountingRouteImport.update({
+  id: '/restaurant/accounting',
+  path: '/restaurant/accounting',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManagerTeamRoute = ManagerTeamRouteImport.update({
   id: '/manager/team',
   path: '/manager/team',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin/approvals': typeof AdminApprovalsRoute
   '/manager/team': typeof ManagerTeamRoute
+  '/restaurant/accounting': typeof RestaurantAccountingRoute
   '/restaurant/campaigns': typeof RestaurantCampaignsRoute
   '/restaurant/menu': typeof RestaurantMenuRoute
   '/restaurant/orders': typeof RestaurantOrdersRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin/approvals': typeof AdminApprovalsRoute
   '/manager/team': typeof ManagerTeamRoute
+  '/restaurant/accounting': typeof RestaurantAccountingRoute
   '/restaurant/campaigns': typeof RestaurantCampaignsRoute
   '/restaurant/menu': typeof RestaurantMenuRoute
   '/restaurant/orders': typeof RestaurantOrdersRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin/approvals': typeof AdminApprovalsRoute
   '/manager/team': typeof ManagerTeamRoute
+  '/restaurant/accounting': typeof RestaurantAccountingRoute
   '/restaurant/campaigns': typeof RestaurantCampaignsRoute
   '/restaurant/menu': typeof RestaurantMenuRoute
   '/restaurant/orders': typeof RestaurantOrdersRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/restaurants'
     | '/admin/approvals'
     | '/manager/team'
+    | '/restaurant/accounting'
     | '/restaurant/campaigns'
     | '/restaurant/menu'
     | '/restaurant/orders'
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/restaurants'
     | '/admin/approvals'
     | '/manager/team'
+    | '/restaurant/accounting'
     | '/restaurant/campaigns'
     | '/restaurant/menu'
     | '/restaurant/orders'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/restaurants'
     | '/admin/approvals'
     | '/manager/team'
+    | '/restaurant/accounting'
     | '/restaurant/campaigns'
     | '/restaurant/menu'
     | '/restaurant/orders'
@@ -193,6 +205,7 @@ export interface RootRouteChildren {
   RestaurantsRoute: typeof RestaurantsRouteWithChildren
   AdminApprovalsRoute: typeof AdminApprovalsRoute
   ManagerTeamRoute: typeof ManagerTeamRoute
+  RestaurantAccountingRoute: typeof RestaurantAccountingRoute
   RestaurantCampaignsRoute: typeof RestaurantCampaignsRoute
   RestaurantMenuRoute: typeof RestaurantMenuRoute
   RestaurantOrdersRoute: typeof RestaurantOrdersRoute
@@ -277,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RestaurantCampaignsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/restaurant/accounting': {
+      id: '/restaurant/accounting'
+      path: '/restaurant/accounting'
+      fullPath: '/restaurant/accounting'
+      preLoaderRoute: typeof RestaurantAccountingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/manager/team': {
       id: '/manager/team'
       path: '/manager/team'
@@ -316,6 +336,7 @@ const rootRouteChildren: RootRouteChildren = {
   RestaurantsRoute: RestaurantsRouteWithChildren,
   AdminApprovalsRoute: AdminApprovalsRoute,
   ManagerTeamRoute: ManagerTeamRoute,
+  RestaurantAccountingRoute: RestaurantAccountingRoute,
   RestaurantCampaignsRoute: RestaurantCampaignsRoute,
   RestaurantMenuRoute: RestaurantMenuRoute,
   RestaurantOrdersRoute: RestaurantOrdersRoute,

@@ -13,7 +13,7 @@ import { Switch } from "../components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "../components/ui/dialog";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
-import { Plus, Flame, Timer } from "lucide-react";
+import { Plus, Flame, Timer, CalendarClock, Store } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/restaurant/campaigns")({
@@ -25,24 +25,34 @@ function Page() {
   const { profile } = useAuth();
   const [camps, setCamps] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_min: "10", free_delivery: true });
+  const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_min: "10", free_delivery: true, delivery_date: "", delivery_time: "" });
   const [now, setNow] = useState(Date.now());
 
   const load = () => {
     if (!profile?.restaurant_id) return;
-    supabase.from("campaigns").select("*").eq("restaurant_id", profile.restaurant_id).order("created_at", { ascending: false }).then(({ data }) => setCamps(data ?? []));
+    supabase.from("campaigns")
+      .select("*, campaign_participants(quantity, stores(name))")
+      .eq("restaurant_id", profile.restaurant_id)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setCamps(data ?? []));
   };
   useEffect(load, [profile]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
   const create = async () => {
     if (!profile?.restaurant_id || !form.title || !form.item_name || !form.price) { toast.error("Eksik alan"); return; }
+    
     const expires = new Date(Date.now() + Number(form.duration_min) * 60000).toISOString();
+    let delivery_time = null;
+    if (form.delivery_date && form.delivery_time) {
+      delivery_time = new Date(`${form.delivery_date}T${form.delivery_time}`).toISOString();
+    }
+
     const { data: c, error } = await supabase.from("campaigns").insert({
       restaurant_id: profile.restaurant_id,
       title: form.title, description: form.description, item_name: form.item_name,
       price: Number(form.price), target_participants: Number(form.target_participants),
-      expires_at: expires, free_delivery: form.free_delivery, status: "active",
+      expires_at: expires, delivery_time: delivery_time, free_delivery: form.free_delivery, status: "active",
     }).select().single();
     if (error) { toast.error(error.message); return; }
     await supabase.from("notifications").insert({ broadcast: true, title: "🔥 Yeni Kampanya: " + form.title, body: `${form.item_name} — ₺${form.price} · ${form.target_participants} kişide tetiklenir`, type: "campaign", link: "/campaigns" });
@@ -76,7 +86,11 @@ function Page() {
               <div className="grid grid-cols-3 gap-2">
                 <div><Label>Fiyat ₺</Label><Input type="number" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} /></div>
                 <div><Label>Hedef Kişi</Label><Input type="number" value={form.target_participants} onChange={(e) => setForm({...form, target_participants: e.target.value})} /></div>
-                <div><Label>Süre (dk)</Label><Input type="number" value={form.duration_min} onChange={(e) => setForm({...form, duration_min: e.target.value})} /></div>
+                <div><Label>Katılım Süresi (dk)</Label><Input type="number" value={form.duration_min} onChange={(e) => setForm({...form, duration_min: e.target.value})} /></div>
+              </div>
+              <div className="grid gap-4 rounded-lg border bg-secondary/20 p-3 sm:grid-cols-2">
+                <div><Label>İleri Tarihli Sipariş (Tarih)</Label><Input type="date" value={form.delivery_date} onChange={(e) => setForm({...form, delivery_date: e.target.value})} /></div>
+                <div><Label>Teslimat Saati</Label><Input type="time" value={form.delivery_time} onChange={(e) => setForm({...form, delivery_time: e.target.value})} /></div>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3"><Label>Ücretsiz Teslimat</Label><Switch checked={form.free_delivery} onCheckedChange={(v) => setForm({...form, free_delivery: v})} /></div>
             </div>
@@ -101,6 +115,32 @@ function Page() {
                     <div className="mb-1 flex justify-between text-xs"><span>{c.current_participants}/{c.target_participants} kişi</span><span className="flex items-center gap-1"><Timer className="h-3 w-3" />{fmt(ms)}</span></div>
                     <Progress value={pct} />
                   </div>
+                  
+                  {c.delivery_time && (
+                    <div className="flex items-center gap-2 rounded-md bg-secondary/50 p-2 text-xs font-medium text-secondary-foreground">
+                      <CalendarClock className="h-4 w-4" /> Teslimat: {new Date(c.delivery_time).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}
+                    </div>
+                  )}
+
+                  {c.campaign_participants && c.campaign_participants.length > 0 && (
+                    <div className="mt-2 rounded-md border p-2">
+                      <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-muted-foreground"><Store className="h-3 w-3" /> Gelen Siparişler (Mağaza Bazlı)</div>
+                      <div className="space-y-1">
+                        {Object.entries(
+                          c.campaign_participants.reduce((acc: any, p: any) => {
+                            const name = p.stores?.name || "Bilinmeyen Mağaza";
+                            acc[name] = (acc[name] || 0) + p.quantity;
+                            return acc;
+                          }, {})
+                        ).map(([name, qty]) => (
+                          <div key={name} className="flex justify-between text-xs">
+                            <span>{name}</span>
+                            <span className="font-bold">{String(qty)} Adet</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {c.status === "reached" && <Button onClick={() => confirm(c)} className="w-full bg-success text-success-foreground">Onayla ve Hazırla</Button>}
                   {(c.status === "active" || c.status === "reached") && <Button onClick={() => cancel(c)} variant="outline" className="w-full">İptal</Button>}
                 </CardContent>

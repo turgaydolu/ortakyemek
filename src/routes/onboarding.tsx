@@ -26,6 +26,9 @@ function Onboarding() {
   const [storeId, setStoreId] = useState<string>("");
   const [restName, setRestName] = useState("");
   const [cuisine, setCuisine] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [minOrderCount, setMinOrderCount] = useState("5");
+  const [bulkPrepTime, setBulkPrepTime] = useState("60");
   const [stores, setStores] = useState<{ id: string; name: string; floor: string | null }[]>([]);
   const [busy, setBusy] = useState(false);
 
@@ -69,8 +72,28 @@ function Onboarding() {
         }
       } else if (role === "restaurant") {
         if (!restName) throw new Error("Lokanta adı gerekli");
+        
+        let logo_url = null;
+        if (logoFile) {
+          const ext = logoFile.name.split('.').pop();
+          const fileName = `${user.id}-${Date.now()}.${ext}`;
+          const { error: uploadError } = await supabase.storage.from('restaurant_logos').upload(fileName, logoFile);
+          if (!uploadError) {
+            const { data } = supabase.storage.from('restaurant_logos').getPublicUrl(fileName);
+            logo_url = data.publicUrl;
+          }
+        }
+
         const { data: r, error: e2 } = await supabase.from("restaurants")
-          .insert({ name: restName, cuisine, owner_id: user.id, status: "closed" }).select().single();
+          .insert({ 
+            name: restName, 
+            cuisine, 
+            owner_id: user.id, 
+            status: "closed",
+            logo_url,
+            min_order_count: Number(minOrderCount),
+            bulk_prep_time_minutes: Number(bulkPrepTime)
+          }).select().single();
         if (e2) throw e2;
         updates.restaurant_id = r.id;
       }
@@ -148,9 +171,19 @@ function Onboarding() {
             )}
 
             {role === "restaurant" && (
-              <div className="grid gap-4 rounded-xl bg-secondary/50 p-4 sm:grid-cols-2">
-                <div><Label>Lokanta Adı</Label><Input value={restName} onChange={(e) => setRestName(e.target.value)} /></div>
-                <div><Label>Mutfak Türü</Label><Input value={cuisine} onChange={(e) => setCuisine(e.target.value)} placeholder="Örn: Türk, Fast Food" /></div>
+              <div className="grid gap-4 rounded-xl bg-secondary/50 p-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Lokanta Adı</Label><Input value={restName} onChange={(e) => setRestName(e.target.value)} /></div>
+                  <div><Label>Mutfak Türü</Label><Input value={cuisine} onChange={(e) => setCuisine(e.target.value)} placeholder="Örn: Türk, Fast Food" /></div>
+                </div>
+                <div>
+                  <Label>Lokanta Logosu</Label>
+                  <Input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} className="cursor-pointer bg-background" />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Minimum Sipariş Adeti</Label><Input type="number" min="1" value={minOrderCount} onChange={(e) => setMinOrderCount(e.target.value)} /></div>
+                  <div><Label>Hazırlık Süresi (Dakika)</Label><Input type="number" min="1" value={bulkPrepTime} onChange={(e) => setBulkPrepTime(e.target.value)} /></div>
+                </div>
               </div>
             )}
 
