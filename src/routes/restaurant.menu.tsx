@@ -20,7 +20,7 @@ export const Route = createFileRoute("/restaurant/menu")({
   component: () => (<RequireAuth><Page /></RequireAuth>),
 });
 
-interface MI { id: string; name: string; description: string | null; category: string | null; price: number; combo_price: number | null; takeaway_price: number | null; mall_delivery_price: number | null; available: boolean; image_url?: string | null; }
+interface MI { id: string; name: string; description: string | null; category: string | null; price: number; combo_price: number | null; takeaway_price: number | null; mall_delivery_price: number | null; dine_in_price: number | null; available: boolean; image_url?: string | null; }
 
 function Page() {
   const { profile } = useAuth();
@@ -28,7 +28,7 @@ function Page() {
   const [restStatus, setRestStatus] = useState<"open" | "closed" | "not_accepting">("open");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<MI | null>(null);
-  const [form, setForm] = useState({ name: "", description: "", category: "", price: "", combo_price: "", takeaway_price: "", mall_delivery_price: "", available: true, image_url: "" });
+  const [form, setForm] = useState({ name: "", description: "", category: "", price: "", combo_price: "", takeaway_price: "", mall_delivery_price: "", dine_in_price: "", available: true, image_url: "" });
   const [isUploading, setIsUploading] = useState(false);
 
   const load = () => {
@@ -47,10 +47,10 @@ function Page() {
     } else toast.error(error.message);
   };
 
-  const openNew = () => { setEditing(null); setForm({ name: "", description: "", category: "", price: "", combo_price: "", takeaway_price: "", mall_delivery_price: "", available: true, image_url: "" }); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ name: "", description: "", category: "", price: "", combo_price: "", takeaway_price: "", mall_delivery_price: "", dine_in_price: "", available: true, image_url: "" }); setOpen(true); };
   const openEdit = (m: MI) => {
     setEditing(m);
-    setForm({ name: m.name, description: m.description ?? "", category: m.category ?? "", price: String(m.price), combo_price: m.combo_price ? String(m.combo_price) : "", takeaway_price: m.takeaway_price ? String(m.takeaway_price) : "", mall_delivery_price: m.mall_delivery_price ? String(m.mall_delivery_price) : "", available: m.available, image_url: m.image_url ?? "" });
+    setForm({ name: m.name, description: m.description ?? "", category: m.category ?? "", price: String(m.price), combo_price: m.combo_price ? String(m.combo_price) : "", takeaway_price: m.takeaway_price ? String(m.takeaway_price) : "", mall_delivery_price: m.mall_delivery_price ? String(m.mall_delivery_price) : "", dine_in_price: m.dine_in_price ? String(m.dine_in_price) : "", available: m.available, image_url: m.image_url ?? "" });
     setOpen(true);
   };
 
@@ -98,6 +98,7 @@ function Page() {
       combo_price: form.combo_price ? Number(form.combo_price) : null,
       takeaway_price: form.takeaway_price ? Number(form.takeaway_price) : null,
       mall_delivery_price: form.mall_delivery_price ? Number(form.mall_delivery_price) : null,
+      dine_in_price: form.dine_in_price ? Number(form.dine_in_price) : null,
       available: form.available,
       image_url: form.image_url || null,
     };
@@ -166,7 +167,7 @@ function Page() {
                 <div><Label>Adrese Teslim ₺</Label><Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
                 <div><Label>AVM İçi ₺</Label><Input type="number" step="0.01" value={form.mall_delivery_price} onChange={(e) => setForm({ ...form, mall_delivery_price: e.target.value })} /></div>
                 <div><Label>Gel-Al ₺</Label><Input type="number" step="0.01" value={form.takeaway_price} onChange={(e) => setForm({ ...form, takeaway_price: e.target.value })} /></div>
-                <div><Label>Lokantada Ye ₺</Label><Input type="number" step="0.01" value={form.combo_price} onChange={(e) => setForm({ ...form, combo_price: e.target.value })} /></div>
+                <div><Label>Lokantada Ye ₺</Label><Input type="number" step="0.01" value={form.dine_in_price} onChange={(e) => setForm({ ...form, dine_in_price: e.target.value })} /></div>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <Label>Satışta</Label>

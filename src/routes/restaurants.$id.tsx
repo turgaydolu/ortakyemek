@@ -21,7 +21,7 @@ export const Route = createFileRoute("/restaurants/$id")({
   component: () => (<RequireAuth><Page /></RequireAuth>),
 });
 
-interface MenuItem { id: string; name: string; description: string | null; price: number; combo_price: number | null; takeaway_price: number | null; mall_delivery_price: number | null; category: string | null; image_url: string | null; available: boolean; extras: { name: string; price: number }[] }
+interface MenuItem { id: string; name: string; description: string | null; price: number; combo_price: number | null; takeaway_price: number | null; mall_delivery_price: number | null; dine_in_price: number | null; category: string | null; image_url: string | null; available: boolean; extras: { name: string; price: number }[] }
 interface Rest { id: string; name: string; status: string; min_order_amount: number; min_order_count: number; delivery_note: string | null }
 
 interface CartItem { id: string; name: string; unit_price: number; quantity: number; extras: { name: string; price: number }[]; notes?: string }
@@ -47,7 +47,7 @@ function Page() {
   const priceFor = (m: MenuItem) => {
     if (delivery === "takeaway" && m.takeaway_price) return Number(m.takeaway_price);
     if (delivery === "mall_delivery" && m.mall_delivery_price) return Number(m.mall_delivery_price);
-    if (delivery === "dine_in" && m.combo_price) return Number(m.combo_price);
+    if (delivery === "dine_in" && m.dine_in_price) return Number(m.dine_in_price);
     return Number(m.price);
   };
 
