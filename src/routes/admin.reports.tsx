@@ -26,7 +26,7 @@ function AdminReports() {
     setLoading(true);
     
     // Tüm Kampanyalar
-    const { data: campsData } = await supabase
+    const { data: campsData, error: campsError } = await supabase
       .from("campaigns")
       .select(`
         *,
@@ -34,17 +34,32 @@ function AdminReports() {
         campaign_participants ( quantity, user_id, profiles ( full_name ), stores ( name ) )
       `)
       .order("created_at", { ascending: false });
+
+    if (campsError) {
+      console.error("Camps error:", campsError);
+      alert("Kampanyalar çekilemedi: " + campsError.message);
+    }
       
     // Tüm Siparişler
-    const { data: ordersData } = await supabase
+    const { data: ordersData, error: ordersError } = await supabase
       .from("orders")
       .select("*, restaurants ( name )")
       .in("status", ["delivered", "preparing"]);
 
+    if (ordersError) {
+      console.error("Orders error:", ordersError);
+      alert("Siparişler çekilemedi: " + ordersError.message);
+    }
+
     // Lokantalar
-    const { data: restsData } = await supabase
+    const { data: restsData, error: restsError } = await supabase
       .from("restaurants")
       .select("id, name");
+
+    if (restsError) {
+      console.error("Rests error:", restsError);
+      alert("Lokantalar çekilemedi: " + restsError.message);
+    }
 
     const camps = campsData || [];
     setCampaigns(camps);
