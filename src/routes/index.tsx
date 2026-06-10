@@ -109,8 +109,6 @@ function Landing() {
         </section>
 
 
-        </section>
-
         <section className="py-12">
           <div className="mb-8 text-center">
             <h2 className="text-3xl font-display font-bold">Yayındaki Canlı Kampanyalar</h2>
