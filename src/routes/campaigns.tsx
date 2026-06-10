@@ -69,11 +69,11 @@ function Page() {
   };
   
   const handleJoinClick = (c: Campaign) => {
-    if (c.delivery_time_2) {
-      setSelectedCampaign(c);
-      setSelectedTime(c.delivery_time || null);
+    if (!c.delivery_time && !c.delivery_time_2) {
+      join(c, null);
     } else {
-      join(c, c.delivery_time);
+      setSelectedCampaign(c);
+      setSelectedTime(c.delivery_time || "");
     }
   };
   const leave = async (c: Campaign) => {
@@ -170,7 +170,7 @@ function Page() {
                     <Button onClick={() => leave(c)} variant="outline" className="w-full">Vazgeç</Button>
                   ) : (
                     <Button onClick={() => handleJoinClick(c)} disabled={full} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95">
-                      <Flame className="mr-2 h-4 w-4" /> {full ? "Doldu" : "Kampanyaya Katıl"}
+                      <Flame className="mr-2 h-4 w-4" /> {full ? "Doldu" : "Katıl"}
                     </Button>
                   )}
                 </CardContent>
@@ -209,7 +209,7 @@ function Page() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setSelectedCampaign(null)}>İptal</Button>
-              <Button onClick={() => join(selectedCampaign, selectedTime)}>Onayla ve Katıl</Button>
+              <Button onClick={() => join(selectedCampaign, selectedTime)}>Katıl</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

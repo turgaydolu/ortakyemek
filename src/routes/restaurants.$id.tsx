@@ -144,8 +144,8 @@ function Page() {
     if (!profile) return toast.error("Giriş yapın");
     if (!profile.store_id && profile.role !== "manager") return toast.error("Mağazanız yok");
     
-    if ((!c.delivery_time && !c.delivery_time_2) || (c.delivery_time && !c.delivery_time_2)) {
-      joinCampaign(c, c.delivery_time || null);
+    if (!c.delivery_time && !c.delivery_time_2) {
+      joinCampaign(c, null);
     } else {
       setSelectedCampaign(c);
       setSelectedTime(c.delivery_time || "");
@@ -230,7 +230,7 @@ function Page() {
                           </div>
                           <Progress value={pct} />
                         </div>
-                        <Button onClick={() => handleJoinClick(c)} size="sm" className="w-full mt-3 bg-gradient-primary text-primary-foreground">Kampanyaya Katıl</Button>
+                        <Button onClick={() => handleJoinClick(c)} size="sm" className="w-full mt-3 bg-gradient-primary text-primary-foreground">Katıl</Button>
                       </CardContent>
                     </Card>
                   )
@@ -342,7 +342,7 @@ function Page() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setSelectedCampaign(null)}>İptal</Button>
-              <Button onClick={() => joinCampaign(selectedCampaign, selectedTime)}>Onayla ve Katıl</Button>
+              <Button onClick={() => joinCampaign(selectedCampaign, selectedTime)}>Katıl</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
