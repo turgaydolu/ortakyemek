@@ -5,8 +5,9 @@ import { AppShell } from "../components/AppShell";
 import { RequireAuth } from "../lib/auth-guard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { Store, Flame, Banknote, CalendarClock, Target, Users } from "lucide-react";
+import { Store, Flame, Banknote, CalendarClock, Target, Users, Download } from "lucide-react";
 
 export const Route = createFileRoute("/admin/reports")({
   head: () => ({ meta: [{ title: "Ciro & Raporlar — Ortak Yemek Admin" }] }),
@@ -62,7 +63,7 @@ function AdminReports() {
     }
 
     const camps = campsData || [];
-    setCampaigns(camps);
+    setCampaigns(camps.filter(c => ["active", "reached", "confirmed"].includes(c.status)));
 
     // Muhasebe Hesaplama (Lokanta Bazlı)
     const accMap: Record<string, any> = {};
@@ -97,6 +98,33 @@ function AdminReports() {
   };
 
   const fmtCurrency = (val: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(val);
+
+  const exportToExcel = () => {
+    let csv = "ID,Baslik,Lokanta,Urun,Fiyat,Mevcut_Katilim,Hedef_Katilim,Durum,Son_Kullanma,Hedef_Teslimat\n";
+    campaigns.forEach(c => {
+      const row = [
+        c.id,
+        `"${(c.title || "").replace(/"/g, '""')}"`,
+        `"${(c.restaurants?.name || "").replace(/"/g, '""')}"`,
+        `"${(c.item_name || "").replace(/"/g, '""')}"`,
+        c.price,
+        c.current_participants,
+        c.target_participants,
+        c.status,
+        new Date(c.expires_at).toLocaleString('tr-TR'),
+        c.delivery_time ? new Date(c.delivery_time).toLocaleString('tr-TR') : "Belirtilmedi"
+      ].join(",");
+      csv += row + "\n";
+    });
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Aktif_Kampanyalar_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <AppShell title="Ciro & Raporlar">
@@ -149,6 +177,11 @@ function AdminReports() {
         </TabsContent>
 
         <TabsContent value="campaigns" className="space-y-4">
+          <div className="flex justify-end mb-4">
+            <Button size="sm" onClick={exportToExcel} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white">
+              <Download className="h-4 w-4" /> Excel Olarak İndir
+            </Button>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             {campaigns.map(c => {
               const parts = c.campaign_participants || [];
