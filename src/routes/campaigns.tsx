@@ -251,6 +251,22 @@ function Page() {
                   </div>
                 )}
               </RadioGroup>
+              
+              {selectedTime && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm font-bold text-red-600 text-center animate-pulse">
+                    {(() => {
+                      const dDate = new Date(selectedTime);
+                      const today = new Date();
+                      const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1);
+                      let dateText = dDate.toLocaleDateString('tr-TR');
+                      if (dDate.getDate() === today.getDate() && dDate.getMonth() === today.getMonth()) dateText += " (Bugün)";
+                      else if (dDate.getDate() === tomorrow.getDate() && dDate.getMonth() === tomorrow.getMonth()) dateText += " (Yarın)";
+                      return `Siparişiniz ${dateText} teslim edilecektir.`;
+                    })()}
+                  </p>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setSelectedCampaign(null)}>İptal</Button>
