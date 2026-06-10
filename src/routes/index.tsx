@@ -126,6 +126,18 @@ function Landing() {
                     <p className="text-xs font-semibold text-primary">{c.restaurants?.name}</p>
                     <h3 className="mt-1 font-display text-lg font-bold">{c.title}</h3>
                     <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{c.description || c.item_name}</p>
+                    
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-secondary/50 px-2 py-1 text-xs font-medium text-secondary-foreground">
+                        {c.delivery_method === 'takeaway' ? '🛍️ Gel Al' : c.delivery_method === 'dine_in' ? '🍽️ Masaya Servis' : '🛵 AVM İçi Teslimat'}
+                      </span>
+                      {c.free_delivery && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-success/10 px-2 py-1 text-xs font-medium text-success">
+                          <ShieldCheck className="h-3 w-3" /> Ücretsiz Teslimat
+                        </span>
+                      )}
+                    </div>
+
                     <div className="mt-4">
                       <div className="mb-1 flex justify-between text-xs font-medium">
                         <span>{c.current_participants}/{c.target_participants} kişi katıldı</span>

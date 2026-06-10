@@ -28,7 +28,7 @@ function Page() {
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_min: "10", free_delivery: true, delivery_date: "", delivery_time: "", image_url: "" });
+  const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_min: "10", free_delivery: true, delivery_date: "", delivery_time: "", image_url: "", delivery_method: "mall_delivery" });
   const [now, setNow] = useState(Date.now());
 
   const load = () => {
@@ -63,7 +63,7 @@ function Page() {
       title: form.title, description: form.description, item_name: form.item_name,
       price: Number(form.price), target_participants: Number(form.target_participants),
       expires_at: expires, delivery_time: delivery_time, free_delivery: form.free_delivery, status: "active",
-      image_url: form.image_url || null,
+      image_url: form.image_url || null, delivery_method: form.delivery_method
     }).select().single();
     if (error) { toast.error(error.message); return; }
     await supabase.from("notifications").insert({ broadcast: true, title: "🔥 Yeni Kampanya: " + form.title, body: `${form.item_name} — ₺${form.price} · ${form.target_participants} kişide tetiklenir`, type: "campaign", link: "/campaigns" });
@@ -106,7 +106,8 @@ function Page() {
       free_delivery: c.free_delivery ?? true,
       delivery_date: "",
       delivery_time: "",
-      image_url: c.image_url || ""
+      image_url: c.image_url || "",
+      delivery_method: c.delivery_method || "mall_delivery"
     });
     setOpen(true);
   };
@@ -194,7 +195,20 @@ function Page() {
                 <div><Label>İleri Tarihli Sipariş (Tarih)</Label><Input type="date" value={form.delivery_date} onChange={(e) => setForm({...form, delivery_date: e.target.value})} /></div>
                 <div><Label>Teslimat Saati</Label><Input type="time" value={form.delivery_time} onChange={(e) => setForm({...form, delivery_time: e.target.value})} /></div>
               </div>
-              <div className="flex items-center justify-between rounded-lg border p-3"><Label>Ücretsiz Teslimat</Label><Switch checked={form.free_delivery} onCheckedChange={(v) => setForm({...form, free_delivery: v})} /></div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>Teslimat Türü</Label>
+                  <Select value={form.delivery_method} onValueChange={(v) => setForm({...form, delivery_method: v})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mall_delivery">🛵 AVM İçi Teslimat</SelectItem>
+                      <SelectItem value="takeaway">🛍️ Gel Al</SelectItem>
+                      <SelectItem value="dine_in">🍽️ Masaya Servis</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-3"><Label>Ücretsiz Teslimat</Label><Switch checked={form.free_delivery} onCheckedChange={(v) => setForm({...form, free_delivery: v})} /></div>
+              </div>
             </div>
             <DialogFooter><Button onClick={create} className="bg-gradient-primary text-primary-foreground"><Flame className="mr-2 h-4 w-4" /> Yayınla</Button></DialogFooter>
           </DialogContent>
@@ -220,6 +234,13 @@ function Page() {
                     </div>
                   )}
                   <p className="text-sm text-muted-foreground">{c.item_name} · ₺{Number(c.price).toFixed(2)}</p>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary" className="font-normal">
+                      {c.delivery_method === 'takeaway' ? '🛍️ Gel Al' : c.delivery_method === 'dine_in' ? '🍽️ Masaya Servis' : '🛵 AVM İçi Teslimat'}
+                    </Badge>
+                  </div>
+
                   <div>
                     <div className="mb-1 flex justify-between text-xs"><span>{c.current_participants}/{c.target_participants} kişi</span><span className="flex items-center gap-1"><Timer className="h-3 w-3" />{fmt(ms)}</span></div>
                     <Progress value={pct} />
