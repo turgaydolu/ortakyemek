@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { toast } from "sonner";
 import { Switch } from "../components/ui/switch";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Ban, CheckCircle } from "lucide-react";
 
 export const Route = createFileRoute("/admin/users")({
   head: () => ({ meta: [{ title: "Kullanıcı Yönetimi — Ortak Yemek" }] }),
@@ -41,12 +41,11 @@ function AdminUsers() {
     const { data: profilesData, error: profilesError } = await supabase
       .from("profiles")
       .select(`
-        id, full_name, phone, created_at, store_id, restaurant_id,
+        id, full_name, phone, created_at, store_id, restaurant_id, approved,
         stores ( name ),
         restaurants ( name, allow_takeaway, allow_dine_in )
       `)
-      .eq("onboarded", true)
-      .eq("approved", true);
+      .eq("onboarded", true);
       
     if (profilesError) {
       toast.error("Kullanıcılar alınamadı");
@@ -88,6 +87,17 @@ function AdminUsers() {
     } else {
       toast.success("Kullanıcı silindi");
       setUsers(prev => prev.filter(u => u.id !== id));
+    }
+  };
+
+  const handleToggleBlock = async (u: any) => {
+    const newStatus = !u.approved;
+    const { error } = await supabase.from("profiles").update({ approved: newStatus }).eq("id", u.id);
+    if (error) {
+      toast.error("İşlem başarısız: " + error.message);
+    } else {
+      toast.success(newStatus ? "Kullanıcı engeli kaldırıldı" : "Kullanıcı engellendi");
+      setUsers(prev => prev.map(x => x.id === u.id ? { ...x, approved: newStatus } : x));
     }
   };
 
@@ -146,13 +156,19 @@ function AdminUsers() {
         {list.map(u => (
           <div key={u.id} className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between bg-card">
             <div>
-              <p className="font-semibold">{u.full_name}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold">{u.full_name}</p>
+                {!u.approved && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-bold text-destructive">Engellendi</span>}
+              </div>
               <p className="text-sm text-muted-foreground">{u.phone || "Telefon yok"}</p>
               <p className="text-xs text-muted-foreground mt-1">
                 {u.role === "restaurant" ? (u.restaurants?.name || "Lokanta seçilmemiş") : (u.stores?.name || "Mağaza seçilmemiş")}
               </p>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => handleToggleBlock(u)} className={u.approved ? "text-warning hover:bg-warning hover:text-warning-foreground" : "text-success hover:bg-success hover:text-success-foreground"}>
+                {u.approved ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+              </Button>
               <Button variant="outline" size="sm" onClick={() => handleEdit(u)}>
                 <Pencil className="h-4 w-4 mr-1" /> Düzenle
               </Button>
@@ -175,15 +191,11 @@ function AdminUsers() {
           <Tabs defaultValue="restaurants">
             <TabsList className="mb-4 w-full justify-start overflow-x-auto">
               <TabsTrigger value="restaurants">Lokantalar ({restaurantUsers.length})</TabsTrigger>
-              <TabsTrigger value="managers">Mağaza Müdürleri ({managerUsers.length})</TabsTrigger>
               <TabsTrigger value="staff">Personeller ({staffUsers.length})</TabsTrigger>
             </TabsList>
             
             <TabsContent value="restaurants">
               {renderUserList(restaurantUsers, "Lokanta yetkilisi")}
-            </TabsContent>
-            <TabsContent value="managers">
-              {renderUserList(managerUsers, "Mağaza müdürü")}
             </TabsContent>
             <TabsContent value="staff">
               {renderUserList(staffUsers, "Personel")}

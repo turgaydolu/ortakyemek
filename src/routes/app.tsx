@@ -3,7 +3,6 @@ import { useAuth } from "../lib/auth-context";
 import { RequireAuth } from "../lib/auth-guard";
 import { AppShell } from "../components/AppShell";
 import { StaffDashboard } from "../components/dashboards/StaffDashboard";
-import { ManagerDashboard } from "../components/dashboards/ManagerDashboard";
 import { RestaurantDashboard } from "../components/dashboards/RestaurantDashboard";
 
 import { ShieldAlert } from "lucide-react";
@@ -28,7 +27,7 @@ function AppPage() {
           </div>
           <h2 className="font-display text-2xl font-bold">Hesabınız Onay Bekliyor</h2>
           <p className="mt-2 max-w-md text-muted-foreground">
-            {r === "manager" ? "Mağaza müdürü başvurunuz sistem yöneticisi tarafından inceleniyor." : r === "restaurant" ? "Lokanta başvurunuz sistem yöneticisi tarafından inceleniyor." : "Mağazaya katılım isteğiniz mağaza müdürünüz tarafından inceleniyor."}
+            {r === "restaurant" ? "Lokanta başvurunuz sistem yöneticisi tarafından inceleniyor." : "Hesabınız sistem yöneticisi tarafından askıya alındı. Lütfen iletişime geçin."}
           </p>
         </div>
       </AppShell>
@@ -41,7 +40,7 @@ function AppPage() {
 
   return (
     <AppShell title={`Merhaba, ${profile?.full_name ?? ""}`}>
-      {r === "restaurant" ? <RestaurantDashboard /> : r === "manager" ? <ManagerDashboard /> : <StaffDashboard />}
+      {r === "restaurant" ? <RestaurantDashboard /> : <StaffDashboard />}
     </AppShell>
   );
 }

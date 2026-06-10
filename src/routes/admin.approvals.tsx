@@ -65,11 +65,9 @@ function AdminApprovals() {
       // Eğer rol çekilemediyse (RLS hatası vs), adminin kör olmaması için yine de gösterelim
       if (!p.user_roles || p.user_roles.length === 0) return true;
 
-      const hasManager = p.user_roles.some((r: any) => r.role === 'manager');
       const hasRestaurant = p.user_roles.some((r: any) => r.role === 'restaurant');
-      const isStaffWithoutManager = p.user_roles.some((r: any) => r.role === 'staff') && p.stores?.manager_id === null;
 
-      return hasManager || hasRestaurant || isStaffWithoutManager;
+      return hasRestaurant;
     });
     
     setPending(filtered);
@@ -111,7 +109,7 @@ function AdminApprovals() {
             {pending.map(p => {
               const role = p.user_roles[0]?.role;
               const placeName = role === "restaurant" ? p.restaurants?.name : p.stores?.name;
-              const roleText = role === "manager" ? "Mağaza Müdürü" : role === "restaurant" ? "Lokanta" : "Personel (Yeni Mağaza)";
+              const roleText = role === "restaurant" ? "Lokanta" : "Bilinmeyen Rol";
 
               return (
                 <div key={p.id} className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">

@@ -53,13 +53,8 @@ function Onboarding() {
     try {
       let updates: any = { full_name: name, phone, onboarded: true };
 
-      if (role === "manager") {
-        if (!storeName) throw new Error("Mağaza adı gerekli");
-        const { data: s, error: e1 } = await supabase.from("stores")
-          .insert({ name: storeName, floor, manager_id: user.id }).select().single();
-        if (e1) throw e1;
-        updates.store_id = s.id;
-      } else if (role === "staff") {
+      if (role === "staff") {
+        updates.approved = true; // Auto-approve staff members
         if (storeId === "other") {
           if (!storeName) throw new Error("Mağaza adı gerekli");
           const { data: s, error: e1 } = await supabase.from("stores")
@@ -130,7 +125,6 @@ function Onboarding() {
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
                   { v: "staff", icon: Users, t: "Personel", d: "Mağazada çalışıyorum" },
-                  { v: "manager", icon: Store, t: "Müdür", d: "Mağaza müdürüyüm" },
                   { v: "restaurant", icon: UtensilsCrossed, t: "Lokanta", d: "Yemek satıyorum" },
                 ].map((r) => (
                   <button key={r.v} type="button" onClick={() => setRole(r.v as AppRole)}
@@ -143,12 +137,7 @@ function Onboarding() {
               </div>
             </div>
 
-            {role === "manager" && (
-              <div className="grid gap-4 rounded-xl bg-secondary/50 p-4 sm:grid-cols-2">
-                <div><Label>Mağaza Adı</Label><Input value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Örn: Boyner" /></div>
-                <div><Label>Kat (opsiyonel)</Label><Input value={floor} onChange={(e) => setFloor(e.target.value)} placeholder="Örn: 1. Kat" /></div>
-              </div>
-            )}
+
 
             {role === "staff" && (
               <div className="rounded-xl bg-secondary/50 p-4">
@@ -166,7 +155,7 @@ function Onboarding() {
                     <div><Label>Kat (opsiyonel)</Label><Input value={floor} onChange={(e) => setFloor(e.target.value)} placeholder="Örn: 1. Kat" /></div>
                   </div>
                 )}
-                <p className="mt-2 text-xs text-muted-foreground">Mağazanız listede yoksa kendiniz ekleyebilirsiniz, ancak yöneticinin onaylaması gerekir.</p>
+                <p className="mt-2 text-xs text-muted-foreground">Mağazanız listede yoksa kendiniz ekleyebilirsiniz. Sistem sizi anında onaylayacaktır.</p>
               </div>
             )}
 
