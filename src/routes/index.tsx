@@ -1,7 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../lib/auth-context";
+import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+import { Progress } from "../components/ui/progress";
 import { UtensilsCrossed, Users, Store, Flame, BellRing, Timer, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -20,11 +23,22 @@ function Landing() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
+  const [camps, setCamps] = useState<any[]>([]);
+  const [now, setNow] = useState(Date.now());
+
   useEffect(() => {
     if (!loading && user) {
       navigate({ to: profile?.onboarded ? "/app" : "/onboarding" });
     }
   }, [loading, user, profile, navigate]);
+
+  useEffect(() => {
+    supabase.from("campaigns").select("*, restaurants(name)").in("status", ["active", "reached"]).order("created_at", { ascending: false }).limit(6).then(({ data }) => setCamps(data ?? []));
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const fmt = (ms: number) => { if (ms <= 0) return "Süre doldu"; const m = Math.floor(ms/60000); const s = Math.floor((ms%60000)/1000); return `${m}:${s.toString().padStart(2,"0")}`; };
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -98,6 +112,55 @@ function Landing() {
                 ))}
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="py-12">
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-display font-bold">Yayındaki Canlı Kampanyalar</h2>
+            <p className="mt-2 text-muted-foreground">Fiyatları görmek ve kampanyalara katılmak için hemen giriş yapın.</p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {camps.map(c => {
+              const ms = new Date(c.expires_at).getTime() - now;
+              const pct = Math.min(100, (c.current_participants / c.target_participants) * 100);
+              return (
+                <Card key={c.id} className="overflow-hidden shadow-soft transition hover:shadow-warm group">
+                  {c.image_url ? (
+                    <div className="aspect-video w-full overflow-hidden bg-secondary">
+                      <img src={c.image_url} alt={c.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                    </div>
+                  ) : (
+                    <div className="aspect-video w-full flex items-center justify-center bg-secondary/50 text-muted-foreground">
+                      <Flame className="h-8 w-8 opacity-20" />
+                    </div>
+                  )}
+                  <CardContent className="p-5">
+                    <p className="text-xs font-semibold text-primary">{c.restaurants?.name}</p>
+                    <h3 className="mt-1 font-display text-lg font-bold">{c.title}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{c.description || c.item_name}</p>
+                    <div className="mt-4">
+                      <div className="mb-1 flex justify-between text-xs font-medium">
+                        <span>{c.current_participants}/{c.target_participants} kişi katıldı</span>
+                        <span className="flex items-center gap-1 text-warning"><Timer className="h-3 w-3" /> {fmt(ms)}</span>
+                      </div>
+                      <Progress value={pct} className="h-2" />
+                    </div>
+                    <div className="mt-5 flex items-center justify-between border-t pt-4">
+                      <div className="text-sm font-medium text-muted-foreground blur-[5px] select-none">₺999.99</div>
+                      <Button asChild size="sm" className="bg-gradient-primary text-primary-foreground">
+                        <Link to="/auth">Fiyatı Gör & Katıl</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+            {camps.length === 0 && (
+              <div className="col-span-full py-12 text-center text-muted-foreground border rounded-xl border-dashed">
+                Şu an aktif kampanya bulunmuyor. Yeni kampanyalar için takipte kalın!
+              </div>
+            )}
           </div>
         </section>
 
