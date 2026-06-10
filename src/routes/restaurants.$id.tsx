@@ -34,7 +34,7 @@ function Page() {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderType, setOrderType] = useState<"individual" | "group">("individual");
-  const [delivery, setDelivery] = useState<"delivery" | "takeaway" | "dine_in">("delivery");
+  const [delivery, setDelivery] = useState<"delivery" | "takeaway" | "mall_delivery" | "dine_in">("delivery");
   const [payment, setPayment] = useState<string>("cash");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
@@ -46,7 +46,8 @@ function Page() {
 
   const priceFor = (m: MenuItem) => {
     if (delivery === "takeaway" && m.takeaway_price) return Number(m.takeaway_price);
-    if (delivery === "dine_in" && m.mall_delivery_price) return Number(m.mall_delivery_price);
+    if (delivery === "mall_delivery" && m.mall_delivery_price) return Number(m.mall_delivery_price);
+    if (delivery === "dine_in" && m.combo_price) return Number(m.combo_price);
     return Number(m.price);
   };
 
@@ -208,8 +209,8 @@ function Cart(props: any) {
 
             <div>
               <Label className="text-xs">Teslim şekli</Label>
-              <RadioGroup value={delivery} onValueChange={setDelivery as any} className="mt-1 grid grid-cols-3 gap-2">
-                {[["delivery", "Adrese Teslim"], ["takeaway", "Gel-Al"], ["dine_in", "AVM İçi Teslimat"]].map(([v, l]) => (
+              <RadioGroup value={delivery} onValueChange={setDelivery as any} className="mt-1 grid grid-cols-2 gap-2">
+                {[["delivery", "Adrese Teslim"], ["takeaway", "Gel-Al"], ["mall_delivery", "AVM İçi"], ["dine_in", "Lokantada Ye"]].map(([v, l]) => (
                   <Label key={v} className="flex flex-col cursor-pointer items-center gap-1 rounded-lg border p-2 text-center text-xs">
                     <RadioGroupItem value={v} className="mb-1" /> {l}
                   </Label>

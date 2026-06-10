@@ -166,7 +166,7 @@ function Page() {
                 <div><Label>Adrese Teslim ₺</Label><Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
                 <div><Label>AVM İçi ₺</Label><Input type="number" step="0.01" value={form.mall_delivery_price} onChange={(e) => setForm({ ...form, mall_delivery_price: e.target.value })} /></div>
                 <div><Label>Gel-Al ₺</Label><Input type="number" step="0.01" value={form.takeaway_price} onChange={(e) => setForm({ ...form, takeaway_price: e.target.value })} /></div>
-                <div><Label>Menü (Combo) ₺</Label><Input type="number" step="0.01" value={form.combo_price} onChange={(e) => setForm({ ...form, combo_price: e.target.value })} /></div>
+                <div><Label>Lokantada Ye ₺</Label><Input type="number" step="0.01" value={form.combo_price} onChange={(e) => setForm({ ...form, combo_price: e.target.value })} /></div>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <Label>Satışta</Label>
