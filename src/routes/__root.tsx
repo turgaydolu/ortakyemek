@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "../components/ui/sonner";
 import { supabase } from "../integrations/supabase/client";
 import { AuthProvider } from "../lib/auth-context";
+import { PWAPrompt } from "../components/PWAPrompt";
 
 function NotFoundComponent() {
   return (
@@ -110,6 +111,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
+        <PWAPrompt />
         <Toaster richColors position="top-right" />
       </AuthProvider>
     </QueryClientProvider>
