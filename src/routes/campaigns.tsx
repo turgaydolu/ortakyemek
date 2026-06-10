@@ -68,7 +68,8 @@ function Page() {
       selected_delivery_time: time || null
     });
     if (error) {
-      toast.error("Katılılamadı");
+      if (error.code === '23505') toast.error("Bu kampanyaya zaten katıldınız!");
+      else toast.error("Katılılamadı");
     } else {
       toast.success("Kampanyaya katıldınız!");
       sendNotificationFromTemplate(

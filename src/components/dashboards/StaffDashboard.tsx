@@ -60,7 +60,8 @@ export function StaffDashboard() {
     });
     
     if (error) {
-      toast.error("Katılılamadı: " + error.message);
+      if (error.code === '23505') toast.error("Bu kampanyaya zaten katıldınız!");
+      else toast.error("Katılılamadı: " + error.message);
     } else {
       toast.success("Kampanyaya katıldınız!");
       // Send join notification
