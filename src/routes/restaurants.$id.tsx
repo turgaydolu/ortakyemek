@@ -124,13 +124,16 @@ function Page() {
                 {items.filter((i) => (i.category || "Diğer") === cat).map((m) => (
                   <Card key={m.id} className="transition hover:shadow-warm">
                     <CardContent className="flex items-start gap-3 p-4">
+                      {m.image_url && (
+                        <img src={m.image_url} alt={m.name} className="h-20 w-20 min-w-20 rounded-md object-cover border" />
+                      )}
                       <div className="flex-1">
                         <p className="font-semibold">{m.name}</p>
                         {m.description && <p className="mt-1 text-xs text-muted-foreground">{m.description}</p>}
                         <p className="mt-2 font-display text-lg font-bold text-primary">₺{priceFor(m).toFixed(2)}</p>
                         {m.combo_price && <p className="text-xs text-muted-foreground">Menü: ₺{Number(m.combo_price).toFixed(2)}</p>}
                       </div>
-                      <Button size="sm" onClick={() => addItem(m)} className="bg-gradient-primary text-primary-foreground"><Plus className="h-4 w-4" /></Button>
+                      <Button size="sm" onClick={() => addItem(m)} className="bg-gradient-primary text-primary-foreground mt-auto"><Plus className="h-4 w-4" /></Button>
                     </CardContent>
                   </Card>
                 ))}

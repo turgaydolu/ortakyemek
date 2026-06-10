@@ -22,6 +22,7 @@ import { Route as RestaurantMenuRouteImport } from './routes/restaurant.menu'
 import { Route as RestaurantCampaignsRouteImport } from './routes/restaurant.campaigns'
 import { Route as RestaurantAccountingRouteImport } from './routes/restaurant.accounting'
 import { Route as ManagerTeamRouteImport } from './routes/manager.team'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminApprovalsRouteImport } from './routes/admin.approvals'
 
 const RestaurantsRoute = RestaurantsRouteImport.update({
@@ -89,6 +90,11 @@ const ManagerTeamRoute = ManagerTeamRouteImport.update({
   path: '/manager/team',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminApprovalsRoute = AdminApprovalsRouteImport.update({
   id: '/admin/approvals',
   path: '/admin/approvals',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin/approvals': typeof AdminApprovalsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/manager/team': typeof ManagerTeamRoute
   '/restaurant/accounting': typeof RestaurantAccountingRoute
   '/restaurant/campaigns': typeof RestaurantCampaignsRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin/approvals': typeof AdminApprovalsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/manager/team': typeof ManagerTeamRoute
   '/restaurant/accounting': typeof RestaurantAccountingRoute
   '/restaurant/campaigns': typeof RestaurantCampaignsRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin/approvals': typeof AdminApprovalsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/manager/team': typeof ManagerTeamRoute
   '/restaurant/accounting': typeof RestaurantAccountingRoute
   '/restaurant/campaigns': typeof RestaurantCampaignsRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/restaurants'
     | '/admin/approvals'
+    | '/admin/users'
     | '/manager/team'
     | '/restaurant/accounting'
     | '/restaurant/campaigns'
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/restaurants'
     | '/admin/approvals'
+    | '/admin/users'
     | '/manager/team'
     | '/restaurant/accounting'
     | '/restaurant/campaigns'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/restaurants'
     | '/admin/approvals'
+    | '/admin/users'
     | '/manager/team'
     | '/restaurant/accounting'
     | '/restaurant/campaigns'
@@ -204,6 +216,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   RestaurantsRoute: typeof RestaurantsRouteWithChildren
   AdminApprovalsRoute: typeof AdminApprovalsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   ManagerTeamRoute: typeof ManagerTeamRoute
   RestaurantAccountingRoute: typeof RestaurantAccountingRoute
   RestaurantCampaignsRoute: typeof RestaurantCampaignsRoute
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManagerTeamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/approvals': {
       id: '/admin/approvals'
       path: '/admin/approvals'
@@ -335,6 +355,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   RestaurantsRoute: RestaurantsRouteWithChildren,
   AdminApprovalsRoute: AdminApprovalsRoute,
+  AdminUsersRoute: AdminUsersRoute,
   ManagerTeamRoute: ManagerTeamRoute,
   RestaurantAccountingRoute: RestaurantAccountingRoute,
   RestaurantCampaignsRoute: RestaurantCampaignsRoute,

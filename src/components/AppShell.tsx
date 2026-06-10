@@ -58,7 +58,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
     : primaryRole === "manager"
     ? [{ to: "/app", label: "Panel" }, { to: "/restaurants", label: "Lokantalar" }, { to: "/campaigns", label: "Kampanyalar" }, { to: "/manager/team", label: "Ekip" }]
     : primaryRole === "admin"
-    ? [{ to: "/admin/approvals", label: "Onaylar" }]
+    ? [{ to: "/admin/approvals", label: "Onaylar" }, { to: "/admin/users", label: "Kullanıcı Yönetimi" }]
     : [{ to: "/app", label: "Panel" }, { to: "/restaurants", label: "Lokantalar" }, { to: "/campaigns", label: "Kampanyalar" }, { to: "/my-orders", label: "Siparişlerim" }];
 
   return (

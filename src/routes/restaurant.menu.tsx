@@ -20,7 +20,7 @@ export const Route = createFileRoute("/restaurant/menu")({
   component: () => (<RequireAuth><Page /></RequireAuth>),
 });
 
-interface MI { id: string; name: string; description: string | null; category: string | null; price: number; combo_price: number | null; takeaway_price: number | null; mall_delivery_price: number | null; available: boolean }
+interface MI { id: string; name: string; description: string | null; category: string | null; price: number; combo_price: number | null; takeaway_price: number | null; mall_delivery_price: number | null; available: boolean; image_url?: string | null; }
 
 function Page() {
   const { profile } = useAuth();
@@ -28,7 +28,8 @@ function Page() {
   const [restStatus, setRestStatus] = useState<"open" | "closed" | "not_accepting">("open");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<MI | null>(null);
-  const [form, setForm] = useState({ name: "", description: "", category: "", price: "", combo_price: "", takeaway_price: "", mall_delivery_price: "", available: true });
+  const [form, setForm] = useState({ name: "", description: "", category: "", price: "", combo_price: "", takeaway_price: "", mall_delivery_price: "", available: true, image_url: "" });
+  const [isUploading, setIsUploading] = useState(false);
 
   const load = () => {
     if (!profile?.restaurant_id) return;
@@ -46,11 +47,46 @@ function Page() {
     } else toast.error(error.message);
   };
 
-  const openNew = () => { setEditing(null); setForm({ name: "", description: "", category: "", price: "", combo_price: "", takeaway_price: "", mall_delivery_price: "", available: true }); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ name: "", description: "", category: "", price: "", combo_price: "", takeaway_price: "", mall_delivery_price: "", available: true, image_url: "" }); setOpen(true); };
   const openEdit = (m: MI) => {
     setEditing(m);
-    setForm({ name: m.name, description: m.description ?? "", category: m.category ?? "", price: String(m.price), combo_price: m.combo_price ? String(m.combo_price) : "", takeaway_price: m.takeaway_price ? String(m.takeaway_price) : "", mall_delivery_price: m.mall_delivery_price ? String(m.mall_delivery_price) : "", available: m.available });
+    setForm({ name: m.name, description: m.description ?? "", category: m.category ?? "", price: String(m.price), combo_price: m.combo_price ? String(m.combo_price) : "", takeaway_price: m.takeaway_price ? String(m.takeaway_price) : "", mall_delivery_price: m.mall_delivery_price ? String(m.mall_delivery_price) : "", available: m.available, image_url: m.image_url ?? "" });
     setOpen(true);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      await new Promise(r => img.onload = r);
+      
+      const canvas = document.createElement("canvas");
+      let { width, height } = img;
+      if (width > 800 || height > 800) {
+        if (width > height) { height = Math.round(height * 800 / width); width = 800; }
+        else { width = Math.round(width * 800 / height); height = 800; }
+      }
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      const blob: Blob = await new Promise(r => canvas.toBlob(b => r(b!), "image/jpeg", 0.8));
+      const ext = "jpeg";
+      const path = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+      
+      const { data, error } = await supabase.storage.from("menu_images").upload(path, blob, { contentType: "image/jpeg" });
+      if (error) throw error;
+      
+      const { data: pubData } = supabase.storage.from("menu_images").getPublicUrl(path);
+      setForm(f => ({ ...f, image_url: pubData.publicUrl }));
+    } catch (err: any) {
+      toast.error("Resim yüklenemedi: " + err.message);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const save = async () => {
@@ -63,6 +99,7 @@ function Page() {
       takeaway_price: form.takeaway_price ? Number(form.takeaway_price) : null,
       mall_delivery_price: form.mall_delivery_price ? Number(form.mall_delivery_price) : null,
       available: form.available,
+      image_url: form.image_url || null,
     };
     const { error } = editing
       ? await supabase.from("menu_items").update(payload).eq("id", editing.id)
@@ -102,7 +139,29 @@ function Page() {
             <div className="space-y-3">
               <div><Label>Ad</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
               <div><Label>Açıklama</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} /></div>
-              <div><Label>Kategori</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Örn: Ana Yemek" /></div>
+              <div>
+                <Label>Kategori</Label>
+                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                  <SelectTrigger><SelectValue placeholder="Kategori seçin" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Ana Yemek">Ana Yemek</SelectItem>
+                    <SelectItem value="İçecek">İçecek</SelectItem>
+                    <SelectItem value="Salata">Salata</SelectItem>
+                    <SelectItem value="Ekmek">Ekmek</SelectItem>
+                    <SelectItem value="Garnitür">Garnitür</SelectItem>
+                    <SelectItem value="Tatlı">Tatlı</SelectItem>
+                    <SelectItem value="Diğer">Diğer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Ürün Resmi (JPEG olarak sıkıştırılır)</Label>
+                <div className="flex items-center gap-4 mt-1">
+                  {form.image_url && <img src={form.image_url} alt="Önizleme" className="h-12 w-12 rounded object-cover border" />}
+                  <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploading} className="flex-1" />
+                </div>
+                {isUploading && <p className="text-xs text-muted-foreground mt-1">Resim sıkıştırılıyor ve yükleniyor...</p>}
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <div><Label>Adrese Teslim ₺</Label><Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
                 <div><Label>AVM İçi ₺</Label><Input type="number" step="0.01" value={form.mall_delivery_price} onChange={(e) => setForm({ ...form, mall_delivery_price: e.target.value })} /></div>
@@ -126,6 +185,9 @@ function Page() {
           {items.map((m) => (
             <Card key={m.id}>
               <CardContent className="flex items-start gap-3 p-4">
+                {m.image_url && (
+                  <img src={m.image_url} alt={m.name} className="h-16 w-16 min-w-16 rounded-md object-cover border" />
+                )}
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold">{m.name}</p>
