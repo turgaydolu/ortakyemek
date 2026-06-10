@@ -32,7 +32,7 @@ function AdminReports() {
       .select(`
         *,
         restaurants ( name ),
-        campaign_participants ( quantity, user_id, selected_delivery_time, profiles ( full_name ), stores ( name ) )
+        campaign_participants ( quantity, user_id, selected_delivery_time, profiles!fk_campaign_participants_profiles ( full_name ), stores ( name ) )
       `)
       .order("created_at", { ascending: false });
 

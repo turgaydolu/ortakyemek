@@ -35,7 +35,7 @@ function Page() {
   const load = () => {
     if (!profile?.restaurant_id) return;
     supabase.from("campaigns")
-      .select("*, campaign_participants(id, quantity, stores(name), selected_delivery_time, profiles(full_name))")
+      .select("*, campaign_participants(id, quantity, stores(name), selected_delivery_time, profiles!fk_campaign_participants_profiles(full_name))")
       .eq("restaurant_id", profile.restaurant_id)
       .in("status", ["active", "reached", "confirmed", "cancelled"])
       .order("created_at", { ascending: false })
