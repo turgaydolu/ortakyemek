@@ -13,6 +13,7 @@ import { Textarea } from "../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "../components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../components/ui/dialog";
 import { Plus, Minus, Trash2, ShoppingCart, Flame, Timer, Users, Star, MessageSquare } from "lucide-react";
 import { Progress } from "../components/ui/progress";
 import { toast } from "sonner";
@@ -42,6 +43,8 @@ function Page() {
   const [payment, setPayment] = useState<string>("cash");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
+  const [selectedTime, setSelectedTime] = useState<string>("");
 
   useEffect(() => {
     supabase.from("restaurants").select("id,name,status,min_order_amount,min_order_count,delivery_note").eq("id", id).single().then(({ data }) => setRest(data as Rest));
@@ -110,11 +113,43 @@ function Page() {
         user_id: null, broadcast: false, title: "Yeni sipariş", body: `${rest.name} - ₺${total.toFixed(2)}`, type: "order",
       });
 
-      toast.success("Sipariş gönderildi! Lokanta onayı bekleniyor.");
+      setCart([]);
+      toast.success("Sipariş alındı");
       navigate({ to: "/my-orders" });
     } catch (e: any) {
       toast.error(e.message);
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const joinCampaign = async (c: any, time: string | null) => {
+    const { error } = await supabase.from("campaign_participants").insert({ 
+      campaign_id: c.id, 
+      user_id: profile?.id, 
+      store_id: profile?.store_id,
+      selected_delivery_time: time 
+    });
+    if (error) {
+      if (error.code === '23505') toast.error("Bu kampanyaya zaten katıldınız!");
+      else toast.error(error.message);
+    } else { 
+      toast.success("Kampanyaya katıldın!"); 
+      supabase.from("campaigns").select("*").eq("restaurant_id", id).in("status", ["active", "reached"]).order("expires_at").then(({ data }) => setCampaigns(data ?? []));
+      setSelectedCampaign(null); 
+    }
+  };
+
+  const handleJoinClick = (c: any) => {
+    if (!profile) return toast.error("Giriş yapın");
+    if (!profile.store_id && profile.role !== "manager") return toast.error("Mağazanız yok");
+    
+    if ((!c.delivery_time && !c.delivery_time_2) || (c.delivery_time && !c.delivery_time_2)) {
+      joinCampaign(c, c.delivery_time || null);
+    } else {
+      setSelectedCampaign(c);
+      setSelectedTime(c.delivery_time || "");
+    }
   };
 
   const categories = Array.from(new Set(items.map((i) => i.category || "Diğer")));
@@ -195,7 +230,7 @@ function Page() {
                           </div>
                           <Progress value={pct} />
                         </div>
-                        <Button asChild size="sm" className="w-full mt-3 bg-gradient-primary text-primary-foreground"><Link to="/campaigns">Kampanyaya Katıl</Link></Button>
+                        <Button onClick={() => handleJoinClick(c)} size="sm" className="w-full mt-3 bg-gradient-primary text-primary-foreground">Kampanyaya Katıl</Button>
                       </CardContent>
                     </Card>
                   )
@@ -277,6 +312,41 @@ function Page() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {selectedCampaign && (
+        <Dialog open={!!selectedCampaign} onOpenChange={(open) => !open && setSelectedCampaign(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Teslimat Saatini Seçin</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="mb-4 text-sm text-muted-foreground">Lütfen kampanyaya katılmak için size uygun teslimat saatini seçin:</p>
+              <RadioGroup value={selectedTime || ""} onValueChange={setSelectedTime}>
+                {selectedCampaign.delivery_time && (
+                  <div className="flex items-center space-x-2 border p-3 rounded-md">
+                    <RadioGroupItem value={selectedCampaign.delivery_time} id="t1" />
+                    <Label htmlFor="t1" className="flex-1 cursor-pointer font-medium text-base">
+                      {new Date(selectedCampaign.delivery_time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} Teslimatı
+                    </Label>
+                  </div>
+                )}
+                {selectedCampaign.delivery_time_2 && (
+                  <div className="flex items-center space-x-2 border p-3 rounded-md">
+                    <RadioGroupItem value={selectedCampaign.delivery_time_2} id="t2" />
+                    <Label htmlFor="t2" className="flex-1 cursor-pointer font-medium text-base">
+                      {new Date(selectedCampaign.delivery_time_2).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} Teslimatı
+                    </Label>
+                  </div>
+                )}
+              </RadioGroup>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelectedCampaign(null)}>İptal</Button>
+              <Button onClick={() => joinCampaign(selectedCampaign, selectedTime)}>Onayla ve Katıl</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </AppShell>
   );
 }

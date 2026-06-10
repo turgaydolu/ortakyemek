@@ -35,7 +35,7 @@ function Page() {
   const load = () => {
     if (!profile?.restaurant_id) return;
     supabase.from("campaigns")
-      .select("*, campaign_participants(quantity, stores(name), selected_delivery_time)")
+      .select("*, campaign_participants(id, quantity, stores(name), selected_delivery_time, profiles(full_name))")
       .eq("restaurant_id", profile.restaurant_id)
       .in("status", ["active", "reached", "confirmed", "cancelled"])
       .order("created_at", { ascending: false })
@@ -285,27 +285,15 @@ function Page() {
 
                   {c.campaign_participants && c.campaign_participants.length > 0 && (
                     <div className="mt-2 rounded-md border p-2">
-                      <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-muted-foreground"><Store className="h-3 w-3" /> Gelen Siparişler (Mağaza Bazlı)</div>
-                      <div className="space-y-3">
-                        {Object.entries(
-                          c.campaign_participants.reduce((acc: any, p: any) => {
-                            const time = p.selected_delivery_time 
-                              ? new Date(p.selected_delivery_time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) 
-                              : "Standart Saat";
-                            if (!acc[time]) acc[time] = {};
-                            const name = p.stores?.name || "Bilinmeyen Mağaza";
-                            acc[time][name] = (acc[time][name] || 0) + p.quantity;
-                            return acc;
-                          }, {})
-                        ).map(([time, stores]: any) => (
-                          <div key={time}>
-                            <div className="text-xs font-bold text-primary">{time} Teslimatı</div>
-                            {Object.entries(stores).map(([name, qty]) => (
-                              <div key={name} className="flex justify-between text-xs ml-2 border-l border-border pl-2">
-                                <span>{name}</span>
-                                <span className="font-bold">{String(qty)} Adet</span>
-                              </div>
-                            ))}
+                      <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-muted-foreground"><Store className="h-3 w-3" /> Katılımcılar</div>
+                      <div className="space-y-1">
+                        {c.campaign_participants.map((p: any, i: number) => (
+                          <div key={p.id || i} className="flex justify-between text-sm border-b last:border-0 pb-1 last:pb-0">
+                            <div>
+                              <span className="font-medium text-primary">{p.profiles?.full_name ?? "Bilinmeyen Personel"}</span>
+                              <span className="text-xs text-muted-foreground ml-1">({p.stores?.name ?? "Mağaza Yok"})</span>
+                            </div>
+                            <span className="font-bold">{p.quantity} Adet</span>
                           </div>
                         ))}
                       </div>
