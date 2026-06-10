@@ -47,7 +47,11 @@ function Page() {
     } else toast.error(error.message);
   };
 
-  const openNew = () => { setEditing(null); setForm({ name: "", description: "", category: "", price: "", combo_price: "", takeaway_price: "", mall_delivery_price: "", dine_in_price: "", available: true, image_url: "" }); setOpen(true); };
+  const openNew = (type?: "Ana Yemek" | "Diğer") => { 
+    setEditing(null); 
+    setForm({ name: "", description: "", category: type === "Ana Yemek" ? "Ana Yemek" : "İçecek", price: "", combo_price: "", takeaway_price: "", mall_delivery_price: "", dine_in_price: "", available: true, image_url: "" }); 
+    setOpen(true); 
+  };
   const openEdit = (m: MI) => {
     setEditing(m);
     setForm({ name: m.name, description: m.description ?? "", category: m.category ?? "", price: String(m.price), combo_price: m.combo_price ? String(m.combo_price) : "", takeaway_price: m.takeaway_price ? String(m.takeaway_price) : "", mall_delivery_price: m.mall_delivery_price ? String(m.mall_delivery_price) : "", dine_in_price: m.dine_in_price ? String(m.dine_in_price) : "", available: m.available, image_url: m.image_url ?? "" });
@@ -133,9 +137,14 @@ function Page() {
           </Select>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openNew} className="bg-gradient-primary text-primary-foreground"><Plus className="mr-2 h-4 w-4" /> Yeni Ürün</Button>
-          </DialogTrigger>
+          <div className="flex gap-2">
+            <DialogTrigger asChild>
+              <Button onClick={() => openNew("Ana Yemek")} className="bg-gradient-primary text-primary-foreground"><Plus className="mr-2 h-4 w-4" /> Ana Yemek Ekle</Button>
+            </DialogTrigger>
+            <DialogTrigger asChild>
+              <Button onClick={() => openNew("Diğer")} variant="outline"><Plus className="mr-2 h-4 w-4" /> Diğer Ürün Ekle</Button>
+            </DialogTrigger>
+          </div>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editing ? "Ürünü Düzenle" : "Yeni Ürün"}</DialogTitle></DialogHeader>
             <div className="space-y-3">
