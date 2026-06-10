@@ -13,22 +13,60 @@ export function StaffDashboard() {
   const [activeCampaigns, setActiveCampaigns] = useState(0);
   const [myOrders, setMyOrders] = useState(0);
 
-  useEffect(() => {
+  const [liveCamps, setLiveCamps] = useState<any[]>([]);
+
+  const loadDashboard = async () => {
     if (!user) return;
-    (async () => {
-      const [r, c, o] = await Promise.all([
-        supabase.from("restaurants").select("id", { count: "exact", head: true }).eq("status", "open"),
-        supabase.from("campaigns").select("id", { count: "exact", head: true }).eq("status", "active"),
-        supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-      ]);
-      setOpenRests(r.count ?? 0);
-      setActiveCampaigns(c.count ?? 0);
-      setMyOrders(o.count ?? 0);
-    })();
+    const [r, c, o, camps] = await Promise.all([
+      supabase.from("restaurants").select("id", { count: "exact", head: true }).eq("status", "open"),
+      supabase.from("campaigns").select("id", { count: "exact", head: true }).eq("status", "active"),
+      supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("campaigns").select("*, restaurants(name), campaign_participants(quantity)").in("status", ["active", "reached", "confirmed"]).order("expires_at").limit(6),
+    ]);
+    setOpenRests(r.count ?? 0);
+    setActiveCampaigns(c.count ?? 0);
+    setMyOrders(o.count ?? 0);
+    setLiveCamps(camps.data ?? []);
+  };
+
+  useEffect(() => {
+    loadDashboard();
+    if (!user) return;
+    const ch = supabase.channel("dashboard-camps-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "campaigns" }, () => loadDashboard())
+      .on("postgres_changes", { event: "*", schema: "public", table: "campaign_participants" }, () => loadDashboard())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, [user]);
 
   return (
     <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="bg-gradient-warm shadow-warm border-primary/20">
+          <CardHeader><CardTitle className="font-display">Sipariş ver</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">AVM'deki tüm lokantaları gezin, menülere göz atın ve hemen sipariş verin.</p>
+            <Button asChild className="mt-4 bg-gradient-primary text-primary-foreground hover:opacity-95">
+              <Link to="/restaurants">Lokantalara Göz At</Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card className="shadow-soft border-primary/20">
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2">
+              <Flame className="h-5 w-5 text-primary" /> Kampanyalar
+              <Badge className="ml-auto bg-primary text-primary-foreground animate-pulse">CANLI</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Grup kampanyalara katıl, ekibinle birlikte indirim kazan.</p>
+            <Button asChild variant="outline" className="mt-4 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+              <Link to="/campaigns">Kampanyaları Gör</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-3">
         {[
           { icon: UtensilsCrossed, label: "Açık Lokanta", value: openRests, color: "text-primary" },
@@ -44,30 +82,48 @@ export function StaffDashboard() {
         ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="bg-gradient-warm shadow-warm">
-          <CardHeader><CardTitle className="font-display">Sipariş ver</CardTitle></CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">AVM'deki tüm lokantaları gezin, menülere göz atın ve hemen sipariş verin.</p>
-            <Button asChild className="mt-4 bg-gradient-primary text-primary-foreground hover:opacity-95">
-              <Link to="/restaurants">Lokantalara Göz At</Link>
-            </Button>
-          </CardContent>
-        </Card>
-        <Card className="shadow-soft">
-          <CardHeader>
-            <CardTitle className="font-display flex items-center gap-2">
-              <Flame className="h-5 w-5 text-primary" /> Kampanyalar
-              <Badge className="ml-auto bg-primary text-primary-foreground">CANLI</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">Grup kampanyalara katıl, ekibinle birlikte indirim kazan.</p>
-            <Button asChild variant="outline" className="mt-4">
-              <Link to="/campaigns">Kampanyaları Gör</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="mt-8">
+        <h2 className="text-xl font-display font-bold flex items-center gap-2 mb-4">
+          <Flame className="text-primary h-5 w-5" /> 
+          Anlık Kampanyalar
+        </h2>
+        {liveCamps.length === 0 ? (
+          <Card className="border-dashed shadow-none bg-transparent">
+            <CardContent className="py-8 text-center text-muted-foreground">
+              Şu an aktif kampanya bulunmuyor. Yeni fırsatlar eklendiğinde burada görebilirsiniz!
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {liveCamps.map(c => {
+              const currentParticipants = c.campaign_participants?.reduce((sum: number, p: any) => sum + (p.quantity || 1), 0) || 0;
+              const isFull = currentParticipants >= c.target_participants;
+              return (
+                <Card key={c.id} className="shadow-soft overflow-hidden flex flex-col">
+                  {c.image_url && (
+                    <div className="h-32 w-full overflow-hidden bg-secondary/20">
+                      <img src={c.image_url} alt={c.item_name} className="h-full w-full object-cover" />
+                    </div>
+                  )}
+                  <CardContent className="p-4 flex-1 flex flex-col">
+                    <div className="text-xs font-semibold text-primary mb-1">{c.restaurants?.name}</div>
+                    <h3 className="font-display font-bold text-lg mb-1">{c.title}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2 flex-1">{c.description || c.item_name}</p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="font-bold text-lg">₺{Number(c.price).toFixed(2)}</span>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {currentParticipants} / {c.target_participants} Kişi
+                      </span>
+                    </div>
+                    <Button asChild size="sm" className="w-full mt-4 bg-gradient-primary text-primary-foreground">
+                      <Link to="/campaigns">{isFull ? "Tükendi" : "Katıl"}</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
