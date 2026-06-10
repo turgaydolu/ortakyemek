@@ -22,6 +22,7 @@ export type Database = {
           quantity: number
           store_id: string | null
           user_id: string
+          selected_delivery_time: string | null
         }
         Insert: {
           campaign_id: string
@@ -30,6 +31,7 @@ export type Database = {
           quantity?: number
           store_id?: string | null
           user_id: string
+          selected_delivery_time?: string | null
         }
         Update: {
           campaign_id?: string
@@ -38,6 +40,7 @@ export type Database = {
           quantity?: number
           store_id?: string | null
           user_id?: string
+          selected_delivery_time?: string | null
         }
         Relationships: [
           {
@@ -71,6 +74,9 @@ export type Database = {
           target_participants: number
           title: string
           updated_at: string
+          delivery_time: string | null
+          delivery_time_2: string | null
+          delivery_method: string | null
         }
         Insert: {
           created_at?: string
@@ -86,6 +92,9 @@ export type Database = {
           target_participants: number
           title: string
           updated_at?: string
+          delivery_time?: string | null
+          delivery_time_2?: string | null
+          delivery_method?: string | null
         }
         Update: {
           created_at?: string
@@ -101,6 +110,9 @@ export type Database = {
           target_participants?: number
           title?: string
           updated_at?: string
+          delivery_time?: string | null
+          delivery_time_2?: string | null
+          delivery_method?: string | null
         }
         Relationships: [
           {

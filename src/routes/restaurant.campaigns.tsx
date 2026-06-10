@@ -28,13 +28,13 @@ function Page() {
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_hours: "24", free_delivery: true, delivery_date: "", delivery_time: "", image_url: "", delivery_method: "mall_delivery" });
+  const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_hours: "24", free_delivery: true, delivery_date: "", delivery_time: "", delivery_time_2: "", image_url: "", delivery_method: "mall_delivery" });
   const [now, setNow] = useState(Date.now());
 
   const load = () => {
     if (!profile?.restaurant_id) return;
     supabase.from("campaigns")
-      .select("*, campaign_participants(quantity, stores(name))")
+      .select("*, campaign_participants(quantity, stores(name), selected_delivery_time)")
       .eq("restaurant_id", profile.restaurant_id)
       .in("status", ["active", "reached", "confirmed", "cancelled"])
       .order("created_at", { ascending: false })
@@ -54,16 +54,27 @@ function Page() {
     
     const expires = new Date(Date.now() + Number(form.duration_hours) * 3600000).toISOString();
     let delivery_time = null;
+    let delivery_time_2 = null;
     if (form.delivery_date && form.delivery_time) {
       delivery_time = new Date(`${form.delivery_date}T${form.delivery_time}`).toISOString();
+    }
+    if (form.delivery_date && form.delivery_time_2) {
+      delivery_time_2 = new Date(`${form.delivery_date}T${form.delivery_time_2}`).toISOString();
     }
 
     const { data: c, error } = await supabase.from("campaigns").insert({
       restaurant_id: profile.restaurant_id,
-      title: form.title, description: form.description, item_name: form.item_name,
-      price: Number(form.price), target_participants: Number(form.target_participants),
-      expires_at: expires, delivery_time: delivery_time, free_delivery: form.free_delivery, status: "active",
-      image_url: form.image_url || null, delivery_method: form.delivery_method
+      title: form.title,
+      description: form.description,
+      item_name: form.item_name,
+      price: Number(form.price),
+      target_participants: Number(form.target_participants),
+      expires_at: expires,
+      free_delivery: form.free_delivery,
+      delivery_time,
+      delivery_time_2,
+      delivery_method: form.delivery_method,
+      image_url: form.image_url || null
     }).select().single();
     if (error) { toast.error(error.message); return; }
     await supabase.from("notifications").insert({ broadcast: true, title: "🔥 Yeni Kampanya: " + form.title, body: `${form.item_name} — ₺${form.price} · ${form.target_participants} kişide tetiklenir`, type: "campaign", link: "/campaigns" });
@@ -198,9 +209,10 @@ function Page() {
                 <div><Label>Kişi Hedefi</Label><Input type="number" value={form.target_participants} onChange={(e) => setForm({...form, target_participants: e.target.value})} /></div>
                 <div><Label>Süre (Saat)</Label><Input type="number" value={form.duration_hours} onChange={(e) => setForm({...form, duration_hours: e.target.value})} /></div>
               </div>
-              <div className="grid gap-4 rounded-lg border bg-secondary/20 p-3 sm:grid-cols-2">
+              <div className="grid gap-4 rounded-lg border bg-secondary/20 p-3 sm:grid-cols-3">
                 <div><Label>İleri Tarihli Sipariş (Tarih)</Label><Input type="date" value={form.delivery_date} onChange={(e) => setForm({...form, delivery_date: e.target.value})} /></div>
-                <div><Label>Teslimat Saati</Label><Input type="time" value={form.delivery_time} onChange={(e) => setForm({...form, delivery_time: e.target.value})} /></div>
+                <div><Label>1. Teslimat Saati</Label><Input type="time" value={form.delivery_time} onChange={(e) => setForm({...form, delivery_time: e.target.value})} /></div>
+                <div><Label>2. Teslimat Saati (İsteğe Bağlı)</Label><Input type="time" value={form.delivery_time_2} onChange={(e) => setForm({...form, delivery_time_2: e.target.value})} /></div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -262,17 +274,26 @@ function Page() {
                   {c.campaign_participants && c.campaign_participants.length > 0 && (
                     <div className="mt-2 rounded-md border p-2">
                       <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-muted-foreground"><Store className="h-3 w-3" /> Gelen Siparişler (Mağaza Bazlı)</div>
-                      <div className="space-y-1">
+                      <div className="space-y-3">
                         {Object.entries(
                           c.campaign_participants.reduce((acc: any, p: any) => {
+                            const time = p.selected_delivery_time 
+                              ? new Date(p.selected_delivery_time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) 
+                              : "Standart Saat";
+                            if (!acc[time]) acc[time] = {};
                             const name = p.stores?.name || "Bilinmeyen Mağaza";
-                            acc[name] = (acc[name] || 0) + p.quantity;
+                            acc[time][name] = (acc[time][name] || 0) + p.quantity;
                             return acc;
                           }, {})
-                        ).map(([name, qty]) => (
-                          <div key={name} className="flex justify-between text-xs">
-                            <span>{name}</span>
-                            <span className="font-bold">{String(qty)} Adet</span>
+                        ).map(([time, stores]: any) => (
+                          <div key={time}>
+                            <div className="text-xs font-bold text-primary">{time} Teslimatı</div>
+                            {Object.entries(stores).map(([name, qty]) => (
+                              <div key={name} className="flex justify-between text-xs ml-2 border-l border-border pl-2">
+                                <span>{name}</span>
+                                <span className="font-bold">{String(qty)} Adet</span>
+                              </div>
+                            ))}
                           </div>
                         ))}
                       </div>

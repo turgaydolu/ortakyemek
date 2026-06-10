@@ -10,13 +10,16 @@ import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
 import { Flame, Users, Timer } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
+import { Label } from "../components/ui/label";
 
 export const Route = createFileRoute("/campaigns")({
   head: () => ({ meta: [{ title: "Kampanyalar — Ortak Yemek" }] }),
   component: () => (<RequireAuth><Page /></RequireAuth>),
 });
 
-interface Campaign { id: string; restaurant_id: string; title: string; description: string | null; item_name: string; price: number; target_participants: number; current_participants: number; expires_at: string; status: string; free_delivery: boolean; image_url: string | null }
+interface Campaign { id: string; restaurant_id: string; title: string; description: string | null; item_name: string; price: number; target_participants: number; current_participants: number; expires_at: string; status: string; free_delivery: boolean; image_url: string | null; delivery_time?: string; delivery_time_2?: string; }
 interface RestMap { [id: string]: string }
 
 function Page() {
@@ -25,6 +28,8 @@ function Page() {
   const [rests, setRests] = useState<RestMap>({});
   const [joined, setJoined] = useState<Set<string>>(new Set());
   const [now, setNow] = useState(Date.now());
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const load = async () => {
     const { data: c } = await supabase.from("campaigns").select("*").in("status", ["active", "reached", "confirmed"]).order("expires_at");
@@ -51,10 +56,25 @@ function Page() {
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 
-  const join = async (c: Campaign) => {
+  const join = async (c: Campaign, time?: string | null) => {
     if (!user) return;
-    const { error } = await supabase.from("campaign_participants").insert({ campaign_id: c.id, user_id: user.id, store_id: profile?.store_id, quantity: 1 });
-    if (error) toast.error(error.message); else { toast.success("Kampanyaya katıldın!"); load(); }
+    const { error } = await supabase.from("campaign_participants").insert({ 
+      campaign_id: c.id, 
+      user_id: user.id, 
+      store_id: profile?.store_id, 
+      quantity: 1,
+      selected_delivery_time: time || null
+    });
+    if (error) toast.error(error.message); else { toast.success("Kampanyaya katıldın!"); load(); setSelectedCampaign(null); }
+  };
+  
+  const handleJoinClick = (c: Campaign) => {
+    if (c.delivery_time_2) {
+      setSelectedCampaign(c);
+      setSelectedTime(c.delivery_time || null);
+    } else {
+      join(c, c.delivery_time);
+    }
   };
   const leave = async (c: Campaign) => {
     if (!user) return;
@@ -140,7 +160,7 @@ function Page() {
                   ) : isJoined ? (
                     <Button onClick={() => leave(c)} variant="outline" className="w-full">Vazgeç</Button>
                   ) : (
-                    <Button onClick={() => join(c)} disabled={full} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95">
+                    <Button onClick={() => handleJoinClick(c)} disabled={full} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95">
                       <Flame className="mr-2 h-4 w-4" /> {full ? "Doldu" : "Kampanyaya Katıl"}
                     </Button>
                   )}
@@ -149,6 +169,41 @@ function Page() {
             );
           })}
         </div>
+      )}
+
+      {selectedCampaign && (
+        <Dialog open={!!selectedCampaign} onOpenChange={(open) => !open && setSelectedCampaign(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Teslimat Saatini Seçin</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="mb-4 text-sm text-muted-foreground">Lütfen kampanyaya katılmak için size uygun teslimat saatini seçin:</p>
+              <RadioGroup value={selectedTime || ""} onValueChange={setSelectedTime}>
+                {selectedCampaign.delivery_time && (
+                  <div className="flex items-center space-x-2 border p-3 rounded-md">
+                    <RadioGroupItem value={selectedCampaign.delivery_time} id="t1" />
+                    <Label htmlFor="t1" className="flex-1 cursor-pointer font-medium text-base">
+                      {new Date(selectedCampaign.delivery_time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} Teslimatı
+                    </Label>
+                  </div>
+                )}
+                {selectedCampaign.delivery_time_2 && (
+                  <div className="flex items-center space-x-2 border p-3 rounded-md">
+                    <RadioGroupItem value={selectedCampaign.delivery_time_2} id="t2" />
+                    <Label htmlFor="t2" className="flex-1 cursor-pointer font-medium text-base">
+                      {new Date(selectedCampaign.delivery_time_2).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} Teslimatı
+                    </Label>
+                  </div>
+                )}
+              </RadioGroup>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelectedCampaign(null)}>İptal</Button>
+              <Button onClick={() => join(selectedCampaign, selectedTime)}>Onayla ve Katıl</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </AppShell>
   );
