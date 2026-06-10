@@ -23,6 +23,7 @@ import { Route as RestaurantCampaignsRouteImport } from './routes/restaurant.cam
 import { Route as RestaurantAccountingRouteImport } from './routes/restaurant.accounting'
 import { Route as ManagerTeamRouteImport } from './routes/manager.team'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminApprovalsRouteImport } from './routes/admin.approvals'
 
 const RestaurantsRoute = RestaurantsRouteImport.update({
@@ -95,6 +96,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/admin/reports',
+  path: '/admin/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminApprovalsRoute = AdminApprovalsRouteImport.update({
   id: '/admin/approvals',
   path: '/admin/approvals',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin/approvals': typeof AdminApprovalsRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/users': typeof AdminUsersRoute
   '/manager/team': typeof ManagerTeamRoute
   '/restaurant/accounting': typeof RestaurantAccountingRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin/approvals': typeof AdminApprovalsRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/users': typeof AdminUsersRoute
   '/manager/team': typeof ManagerTeamRoute
   '/restaurant/accounting': typeof RestaurantAccountingRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin/approvals': typeof AdminApprovalsRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/users': typeof AdminUsersRoute
   '/manager/team': typeof ManagerTeamRoute
   '/restaurant/accounting': typeof RestaurantAccountingRoute
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/restaurants'
     | '/admin/approvals'
+    | '/admin/reports'
     | '/admin/users'
     | '/manager/team'
     | '/restaurant/accounting'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/restaurants'
     | '/admin/approvals'
+    | '/admin/reports'
     | '/admin/users'
     | '/manager/team'
     | '/restaurant/accounting'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/restaurants'
     | '/admin/approvals'
+    | '/admin/reports'
     | '/admin/users'
     | '/manager/team'
     | '/restaurant/accounting'
@@ -216,6 +228,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   RestaurantsRoute: typeof RestaurantsRouteWithChildren
   AdminApprovalsRoute: typeof AdminApprovalsRoute
+  AdminReportsRoute: typeof AdminReportsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   ManagerTeamRoute: typeof ManagerTeamRoute
   RestaurantAccountingRoute: typeof RestaurantAccountingRoute
@@ -324,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/admin/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/approvals': {
       id: '/admin/approvals'
       path: '/admin/approvals'
@@ -355,6 +375,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   RestaurantsRoute: RestaurantsRouteWithChildren,
   AdminApprovalsRoute: AdminApprovalsRoute,
+  AdminReportsRoute: AdminReportsRoute,
   AdminUsersRoute: AdminUsersRoute,
   ManagerTeamRoute: ManagerTeamRoute,
   RestaurantAccountingRoute: RestaurantAccountingRoute,
@@ -365,13 +386,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
