@@ -180,7 +180,7 @@ function Page() {
                         </div>
                         <p className="mt-1 text-sm">{c.item_name} - ₺{Number(c.price).toFixed(2)}</p>
                         {deliveryText && (
-                          <div className="mt-2 text-sm font-bold text-primary bg-primary/10 inline-block px-3 py-1.5 rounded-md">
+                          <div className="mt-2 text-sm font-bold text-primary bg-primary/10 inline-block px-3 py-1.5 rounded-md animate-pulse">
                             {deliveryText}
                           </div>
                         )}

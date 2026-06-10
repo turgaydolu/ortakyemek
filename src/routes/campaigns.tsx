@@ -134,7 +134,7 @@ function Page() {
                   <p className="text-sm opacity-90">{c.item_name}</p>
                   
                   {deliveryText && (
-                    <div className="mt-3 text-sm font-bold bg-white/20 inline-block px-3 py-1.5 rounded-md">
+                    <div className="mt-3 text-sm font-bold bg-white/20 inline-block px-3 py-1.5 rounded-md animate-pulse">
                       {deliveryText}
                     </div>
                   )}
