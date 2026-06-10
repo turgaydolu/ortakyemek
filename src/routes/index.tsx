@@ -5,7 +5,7 @@ import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Progress } from "../components/ui/progress";
-import { UtensilsCrossed, Users, Store, Flame, BellRing, Timer, ShieldCheck } from "lucide-react";
+import { UtensilsCrossed, Users, Store, Flame, BellRing, Timer, ShieldCheck, CalendarClock } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -133,6 +133,11 @@ function Landing() {
                       </div>
                       <Progress value={pct} className="h-2" />
                     </div>
+                    {c.delivery_time && (
+                      <div className="mt-3 flex items-center gap-1.5 rounded-md bg-secondary/50 p-1.5 text-xs font-medium text-secondary-foreground">
+                        <CalendarClock className="h-3.5 w-3.5 text-primary" /> Teslimat: {new Date(c.delivery_time).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}
+                      </div>
+                    )}
                     <div className="mt-5 flex items-center justify-between border-t pt-4">
                       <div className="text-sm font-medium text-muted-foreground blur-[5px] select-none">₺999.99</div>
                       <Button asChild size="sm" className="bg-gradient-primary text-primary-foreground">
