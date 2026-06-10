@@ -74,45 +74,39 @@ function Landing() {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <header className="container mx-auto flex items-center justify-between px-4 py-6">
+      <header className="container mx-auto flex items-center justify-between px-4 py-4">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Ortak Yemek" className="h-10 w-10 rounded-xl object-cover shadow-warm" />
-          <span className="text-xl font-display font-bold tracking-tight">Ortak Yemek</span>
+          <span className="hidden sm:inline-block text-xl font-display font-bold tracking-tight">Ortak Yemek</span>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="ghost"><Link to="/auth">Giriş Yap</Link></Button>
-          <Button asChild className="bg-gradient-primary text-primary-foreground shadow-warm hover:opacity-95">
-            <Link to="/auth">Hemen Başla</Link>
+
+        <div className="hidden lg:flex items-center gap-6 text-xs font-medium text-muted-foreground">
+          <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" /> Güvenli ödeme</span>
+          <span className="flex items-center gap-1.5"><BellRing className="h-4 w-4 text-primary" /> Anlık kampanyalar</span>
+          <span className="flex items-center gap-1.5"><Timer className="h-4 w-4 text-primary" /> 30 dk garantisi</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm" className="hidden sm:flex"><Link to="/auth">Giriş Yap</Link></Button>
+          <Button asChild variant="outline" size="sm" className="hidden md:flex"><Link to="/auth">Lokanta Olarak Katıl</Link></Button>
+          <Button asChild size="sm" className="bg-gradient-primary text-primary-foreground shadow-warm hover:opacity-95">
+            <Link to="/auth">Ücretsiz Başla</Link>
           </Button>
         </div>
       </header>
 
       <main className="container mx-auto px-4">
-        <section className="grid items-center gap-12 py-16 lg:grid-cols-2 lg:py-24">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-              <Timer className="h-3 w-3" /> 30 dakikada masanızda
-            </span>
-            <h1 className="mt-4 text-balance text-5xl font-display font-bold leading-[1.05] lg:text-6xl">
-              AVM'deki tüm lezzetler, <span className="text-primary">tek dokunuşta.</span>
-            </h1>
-            <p className="mt-5 max-w-lg text-lg text-muted-foreground">
-              Bireysel siparişten mağaza toplu siparişine, anlık indirim kampanyalarından grup açık artırmalarına — AVM personelinin yemek molasını kolaylaştırır.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="bg-gradient-primary text-primary-foreground shadow-warm hover:opacity-95">
-                <Link to="/auth">Ücretsiz Başla</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link to="/auth">Lokanta Olarak Katıl</Link>
-              </Button>
-            </div>
-            <div className="mt-10 flex flex-wrap gap-6 text-sm text-muted-foreground">
-              <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Güvenli ödeme</span>
-              <span className="flex items-center gap-2"><BellRing className="h-4 w-4 text-primary" /> Anlık kampanyalar</span>
-              <span className="flex items-center gap-2"><Timer className="h-4 w-4 text-primary" /> 30 dk garantisi</span>
-            </div>
-          </div>
+        <section className="py-16 text-center lg:py-28 max-w-4xl mx-auto">
+          <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+            <Timer className="h-3 w-3" /> 30 dakikada masanızda
+          </span>
+          <h1 className="mt-6 text-balance text-5xl font-display font-bold leading-[1.05] lg:text-7xl">
+            AVM'deki tüm lezzetler, <span className="text-primary">tek dokunuşta.</span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground lg:text-xl">
+            Bireysel siparişten mağaza toplu siparişine, anlık indirim kampanyalarından grup açık artırmalarına — AVM personelinin yemek molasını kolaylaştırır.
+          </p>
+        </section>
 
 
         </section>
