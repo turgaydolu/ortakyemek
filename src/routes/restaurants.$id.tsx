@@ -147,10 +147,25 @@ function Page() {
                     if (ms <= 0) return "Süre doldu"; 
                     const h = Math.floor(ms / 3600000);
                     const m = Math.floor((ms % 3600000) / 60000);
-                    const s = Math.floor((ms % 60000) / 1000);
-                    if (h > 0) return `${h}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
-                    return `${m}:${s.toString().padStart(2,"0")}`; 
+                    if (h > 0) return `${h} saat ${m} dk`;
+                    return `${m} dakika`; 
                   };
+
+                  let deliveryText = null;
+                  if (c.delivery_time) {
+                    const dDate = new Date(c.delivery_time);
+                    const today = new Date();
+                    const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1);
+                    const timeStr = dDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                    
+                    if (dDate.getDate() === today.getDate() && dDate.getMonth() === today.getMonth()) {
+                      deliveryText = `Bugün ${timeStr}`;
+                    } else if (dDate.getDate() === tomorrow.getDate() && dDate.getMonth() === tomorrow.getMonth()) {
+                      deliveryText = `Yarın için sipariş ver (${timeStr})`;
+                    } else {
+                      deliveryText = `${dDate.toLocaleDateString('tr-TR')} ${timeStr} için sipariş ver`;
+                    }
+                  }
                   return (
                     <Card key={c.id} className="shadow-warm border-primary/20 bg-primary/5">
                       <CardContent className="p-4">
@@ -159,6 +174,11 @@ function Page() {
                           <span className="flex items-center gap-1 text-sm text-primary"><Timer className="h-4 w-4" /> {fmt(ms)}</span>
                         </div>
                         <p className="mt-1 text-sm">{c.item_name} - ₺{Number(c.price).toFixed(2)}</p>
+                        {deliveryText && (
+                          <div className="mt-2 text-xs font-semibold text-primary bg-primary/10 inline-block px-2 py-1 rounded">
+                            {deliveryText}
+                          </div>
+                        )}
                         <div className="mt-3">
                           <div className="mb-1 flex items-center justify-between text-xs">
                             <span className="flex items-center gap-1 font-medium"><Users className="h-3 w-3" /> {c.current_participants} / {c.target_participants} kişi</span>
