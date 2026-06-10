@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
-import { Plus, Flame, Timer, CalendarClock, Store } from "lucide-react";
+import { Plus, Flame, Timer, CalendarClock, Store, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/restaurant/campaigns")({
@@ -78,6 +78,13 @@ function Page() {
   const cancel = async (c: any) => {
     await supabase.from("campaigns").update({ status: "cancelled" }).eq("id", c.id);
     load();
+  };
+
+  const remove = async (c: any) => {
+    if (!window.confirm("Bu kampanyayı kalıcı olarak silmek istediğine emin misin?")) return;
+    await supabase.from("campaigns").delete().eq("id", c.id);
+    load();
+    toast.success("Kampanya kalıcı olarak silindi.");
   };
 
   const handleReactivate = (c: any) => {
@@ -238,9 +245,14 @@ function Page() {
                   {c.status === "reached" && <Button onClick={() => confirm(c)} className="w-full bg-success text-success-foreground">Onayla ve Hazırla</Button>}
                   {(c.status === "active" || c.status === "reached") && <Button onClick={() => cancel(c)} variant="outline" className="w-full">İptal</Button>}
                   {(c.status === "cancelled" || c.status === "confirmed" || (c.status === "active" && ms <= 0)) && (
-                    <Button onClick={() => handleReactivate(c)} variant="secondary" className="w-full mt-2 border-primary text-primary hover:bg-primary/10">
-                      Düzenle ve Tekrar Başlat
-                    </Button>
+                    <div className="mt-2 flex gap-2">
+                      <Button onClick={() => handleReactivate(c)} variant="secondary" className="flex-1 border-primary text-primary hover:bg-primary/10">
+                        Düzenle ve Tekrar Başlat
+                      </Button>
+                      <Button onClick={() => remove(c)} variant="destructive" size="icon" className="w-10 flex-shrink-0" title="Sil">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </Card>
