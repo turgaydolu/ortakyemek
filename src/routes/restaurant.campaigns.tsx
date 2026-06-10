@@ -11,6 +11,7 @@ import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { Switch } from "../components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "../components/ui/dialog";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
 import { Plus, Flame, Timer, CalendarClock, Store } from "lucide-react";
@@ -24,8 +25,10 @@ export const Route = createFileRoute("/restaurant/campaigns")({
 function Page() {
   const { profile } = useAuth();
   const [camps, setCamps] = useState<any[]>([]);
+  const [menuItems, setMenuItems] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_min: "10", free_delivery: true, delivery_date: "", delivery_time: "" });
+  const [isUploading, setIsUploading] = useState(false);
+  const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_min: "10", free_delivery: true, delivery_date: "", delivery_time: "", image_url: "" });
   const [now, setNow] = useState(Date.now());
 
   const load = () => {
@@ -35,6 +38,12 @@ function Page() {
       .eq("restaurant_id", profile.restaurant_id)
       .order("created_at", { ascending: false })
       .then(({ data }) => setCamps(data ?? []));
+      
+    supabase.from("menu_items")
+      .select("*")
+      .eq("restaurant_id", profile.restaurant_id)
+      .eq("available", true)
+      .then(({ data }) => setMenuItems(data ?? []));
   };
   useEffect(load, [profile]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
@@ -53,6 +62,7 @@ function Page() {
       title: form.title, description: form.description, item_name: form.item_name,
       price: Number(form.price), target_participants: Number(form.target_participants),
       expires_at: expires, delivery_time: delivery_time, free_delivery: form.free_delivery, status: "active",
+      image_url: form.image_url || null,
     }).select().single();
     if (error) { toast.error(error.message); return; }
     await supabase.from("notifications").insert({ broadcast: true, title: "🔥 Yeni Kampanya: " + form.title, body: `${form.item_name} — ₺${form.price} · ${form.target_participants} kişide tetiklenir`, type: "campaign", link: "/campaigns" });
@@ -70,6 +80,42 @@ function Page() {
     load();
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      await new Promise(r => img.onload = r);
+      
+      const canvas = document.createElement("canvas");
+      let { width, height } = img;
+      if (width > 800 || height > 800) {
+        if (width > height) { height = Math.round(height * 800 / width); width = 800; }
+        else { width = Math.round(width * 800 / height); height = 800; }
+      }
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      const blob: Blob = await new Promise(r => canvas.toBlob(b => r(b!), "image/jpeg", 0.8));
+      const ext = "jpeg";
+      const path = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+      
+      const { data, error } = await supabase.storage.from("menu_images").upload(path, blob, { contentType: "image/jpeg" });
+      if (error) throw error;
+      
+      const { data: pubData } = supabase.storage.from("menu_images").getPublicUrl(data.path);
+      setForm((prev) => ({ ...prev, image_url: pubData.publicUrl }));
+      toast.success("Resim yüklendi");
+    } catch (err: any) {
+      toast.error("Resim yüklenemedi: " + err.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const fmt = (ms: number) => { if (ms <= 0) return "Süre doldu"; const m = Math.floor(ms/60000); const s = Math.floor((ms%60000)/1000); return `${m}:${s.toString().padStart(2,"0")}`; };
 
   return (
@@ -80,9 +126,34 @@ function Page() {
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Yeni Grup Kampanyası</DialogTitle></DialogHeader>
             <div className="space-y-3">
+              <div>
+                <Label>Mevcut Menüden Seç (İsteğe Bağlı)</Label>
+                <Select onValueChange={(id) => {
+                  const m = menuItems.find(x => x.id === id);
+                  if (m) {
+                    const basePrice = m.price || m.dine_in_price || m.takeaway_price || m.mall_delivery_price || 0;
+                    setForm({ ...form, title: m.name + " Kampanyası", item_name: m.name, price: String(basePrice), description: m.description || "", image_url: m.image_url || "" });
+                  }
+                }}>
+                  <SelectTrigger><SelectValue placeholder="Menüden bir ürün seçin veya manuel girin" /></SelectTrigger>
+                  <SelectContent>
+                    {menuItems.map(m => (
+                      <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div><Label>Başlık</Label><Input value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} placeholder="Adana Dürüm Ayran" /></div>
               <div><Label>Ürün</Label><Input value={form.item_name} onChange={(e) => setForm({...form, item_name: e.target.value})} placeholder="Adana Dürüm + Ayran" /></div>
               <div><Label>Açıklama</Label><Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} rows={2} /></div>
+              <div>
+                <Label>Resim Ekle</Label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploading} className="flex-1" />
+                  {isUploading && <span className="text-xs text-muted-foreground">Yükleniyor...</span>}
+                  {form.image_url && <img src={form.image_url} alt="Preview" className="h-10 w-10 rounded object-cover" />}
+                </div>
+              </div>
               <div className="grid grid-cols-3 gap-2">
                 <div><Label>Fiyat ₺</Label><Input type="number" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} /></div>
                 <div><Label>Hedef Kişi</Label><Input type="number" value={form.target_participants} onChange={(e) => setForm({...form, target_participants: e.target.value})} /></div>
@@ -108,8 +179,15 @@ function Page() {
             const ms = new Date(c.expires_at).getTime() - now;
             return (
               <Card key={c.id} className="shadow-soft">
-                <CardHeader><CardTitle className="flex items-center justify-between font-display"><span>{c.title}</span><Badge>{c.status}</Badge></CardTitle></CardHeader>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between font-display"><span>{c.title}</span><Badge>{c.status}</Badge></CardTitle>
+                </CardHeader>
                 <CardContent className="space-y-3">
+                  {c.image_url && (
+                    <div className="aspect-video w-full overflow-hidden rounded-md bg-secondary/20">
+                      <img src={c.image_url} alt={c.item_name} className="h-full w-full object-cover" />
+                    </div>
+                  )}
                   <p className="text-sm text-muted-foreground">{c.item_name} · ₺{Number(c.price).toFixed(2)}</p>
                   <div>
                     <div className="mb-1 flex justify-between text-xs"><span>{c.current_participants}/{c.target_participants} kişi</span><span className="flex items-center gap-1"><Timer className="h-3 w-3" />{fmt(ms)}</span></div>

@@ -16,7 +16,7 @@ export const Route = createFileRoute("/campaigns")({
   component: () => (<RequireAuth><Page /></RequireAuth>),
 });
 
-interface Campaign { id: string; restaurant_id: string; title: string; description: string | null; item_name: string; price: number; target_participants: number; current_participants: number; expires_at: string; status: string; free_delivery: boolean }
+interface Campaign { id: string; restaurant_id: string; title: string; description: string | null; item_name: string; price: number; target_participants: number; current_participants: number; expires_at: string; status: string; free_delivery: boolean; image_url: string | null }
 interface RestMap { [id: string]: string }
 
 function Page() {
@@ -89,6 +89,11 @@ function Page() {
                   <h3 className="mt-3 font-display text-2xl font-bold">{c.title}</h3>
                   <p className="text-sm opacity-90">{c.item_name}</p>
                 </div>
+                {c.image_url && (
+                  <div className="aspect-video w-full overflow-hidden bg-secondary/20">
+                    <img src={c.image_url} alt={c.item_name} className="h-full w-full object-cover" />
+                  </div>
+                )}
                 <CardContent className="space-y-3 p-5">
                   <div className="flex items-baseline justify-between">
                     <span className="text-sm text-muted-foreground">Kişi başı</span>
