@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "../integrations/supabase/client";
 import { useAuth } from "../lib/auth-context";
@@ -13,7 +13,8 @@ import { Textarea } from "../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "../components/ui/sheet";
-import { Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingCart, Flame, Timer, Users } from "lucide-react";
+import { Progress } from "../components/ui/progress";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/restaurants/$id")({
@@ -32,6 +33,8 @@ function Page() {
   const navigate = useNavigate();
   const [rest, setRest] = useState<Rest | null>(null);
   const [items, setItems] = useState<MenuItem[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [now, setNow] = useState(Date.now());
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderType, setOrderType] = useState<"individual" | "group">("individual");
   const [delivery, setDelivery] = useState<"delivery" | "takeaway" | "mall_delivery" | "dine_in">("delivery");
@@ -42,7 +45,10 @@ function Page() {
   useEffect(() => {
     supabase.from("restaurants").select("id,name,status,min_order_amount,min_order_count,delivery_note").eq("id", id).single().then(({ data }) => setRest(data as Rest));
     supabase.from("menu_items").select("*").eq("restaurant_id", id).eq("available", true).order("category").then(({ data }) => setItems((data ?? []) as any));
+    supabase.from("campaigns").select("*").eq("restaurant_id", id).in("status", ["active", "reached"]).order("expires_at").then(({ data }) => setCampaigns(data ?? []));
   }, [id]);
+
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
   const priceFor = (m: MenuItem) => {
     if (delivery === "takeaway" && m.takeaway_price) return Number(m.takeaway_price);
@@ -117,6 +123,38 @@ function Page() {
         <div className="space-y-6">
           {rest?.delivery_note && (
             <Card className="border-warning/40 bg-warning/10"><CardContent className="p-4 text-sm">{rest.delivery_note}</CardContent></Card>
+          )}
+
+          {campaigns.length > 0 && (
+            <div className="mb-6 space-y-3">
+              <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2"><Flame className="h-5 w-5" /> Aktif Kampanyalar</h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {campaigns.map(c => {
+                  const ms = new Date(c.expires_at).getTime() - now;
+                  const pct = Math.min(100, (c.current_participants / c.target_participants) * 100);
+                  const fmt = (ms: number) => { if (ms <= 0) return "Süre doldu"; const m = Math.floor(ms/60000); const s = Math.floor((ms%60000)/1000); return `${m}:${s.toString().padStart(2,"0")}`; };
+                  return (
+                    <Card key={c.id} className="shadow-warm border-primary/20 bg-primary/5">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between font-display text-lg font-bold">
+                          <span>{c.title}</span>
+                          <span className="flex items-center gap-1 text-sm text-primary"><Timer className="h-4 w-4" /> {fmt(ms)}</span>
+                        </div>
+                        <p className="mt-1 text-sm">{c.item_name} - ₺{Number(c.price).toFixed(2)}</p>
+                        <div className="mt-3">
+                          <div className="mb-1 flex items-center justify-between text-xs">
+                            <span className="flex items-center gap-1 font-medium"><Users className="h-3 w-3" /> {c.current_participants} / {c.target_participants} kişi</span>
+                            <span className="font-bold text-primary">{Math.round(pct)}%</span>
+                          </div>
+                          <Progress value={pct} />
+                        </div>
+                        <Button asChild size="sm" className="w-full mt-3 bg-gradient-primary text-primary-foreground"><Link to="/campaigns">Kampanyaya Katıl</Link></Button>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            </div>
           )}
           {categories.map((cat) => (
             <div key={cat}>
