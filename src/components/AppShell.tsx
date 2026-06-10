@@ -31,6 +31,9 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
         if (n.broadcast || (n as any).user_id === user.id) {
           setNotifs((p) => [n, ...p].slice(0, 20));
           toast(n.title, { description: n.body ?? undefined });
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification(n.title, { body: n.body || "", icon: "/logo.png" });
+          }
         }
       }).subscribe();
     return () => { supabase.removeChannel(ch); };

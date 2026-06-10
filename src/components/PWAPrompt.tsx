@@ -62,8 +62,8 @@ export function PWAPrompt() {
     <div className="fixed bottom-4 left-4 right-4 z-50 flex flex-col gap-2 sm:left-auto sm:right-4 sm:w-80">
       {showPrompt && (
         <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-xl">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10">
-            <Download className="h-5 w-5 text-primary" />
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border shadow-sm">
+            <img src="/logo.png" alt="Ortak Yemek Logo" className="h-full w-full object-cover" />
           </div>
           <div className="flex-1">
             <h3 className="text-sm font-semibold">Ana Ekrana Ekle</h3>
@@ -78,8 +78,8 @@ export function PWAPrompt() {
 
       {showNotifPrompt && (
         <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-xl">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10">
-            <Bell className="h-5 w-5 text-primary" />
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border shadow-sm">
+            <img src="/logo.png" alt="Ortak Yemek Logo" className="h-full w-full object-cover" />
           </div>
           <div className="flex-1">
             <h3 className="text-sm font-semibold">Bildirimleri Aç</h3>
