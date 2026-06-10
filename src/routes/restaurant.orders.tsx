@@ -22,7 +22,7 @@ function Page() {
 
   const load = async () => {
     if (!profile?.restaurant_id) return;
-    const { data } = await supabase.from("orders").select("*, order_items(*), profiles!orders_user_id_fkey(full_name)").eq("restaurant_id", profile.restaurant_id).order("created_at", { ascending: false });
+    const { data } = await supabase.from("orders").select("*, order_items(*), profiles!orders_user_id_fkey(full_name), stores(name)").eq("restaurant_id", profile.restaurant_id).order("created_at", { ascending: false });
     setOrders(data ?? []);
   };
   useEffect(() => { load(); }, [profile]);
@@ -55,8 +55,11 @@ function Page() {
               <CardContent className="p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
-                    <p className="font-semibold">{o.profiles?.full_name ?? "Müşteri"}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("tr-TR")} · {o.delivery_method} · {o.payment_method}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-lg">{o.stores?.name ?? "Mağaza Bilgisi Yok"}</p>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">{o.profiles?.full_name ?? "Müşteri"}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{new Date(o.created_at).toLocaleString("tr-TR")} · {o.delivery_method} · {o.payment_method}</p>
                   </div>
                   <Badge>{ST[o.status]}</Badge>
                 </div>
