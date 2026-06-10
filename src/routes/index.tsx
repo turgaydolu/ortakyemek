@@ -85,20 +85,7 @@ function Landing() {
           <div className="relative">
             <div className="absolute -inset-4 -z-10 rounded-3xl bg-gradient-primary opacity-20 blur-3xl" />
             <div className="grid gap-4 rounded-3xl bg-card p-6 shadow-warm">
-              <div className="flex items-center justify-between rounded-2xl bg-gradient-warm p-4">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">CANLI KAMPANYA</p>
-                  <p className="mt-1 font-display text-lg font-semibold">Adana Dürüm + Ayran</p>
-                  <p className="text-sm text-muted-foreground">30 kişide ücretsiz teslimat</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-display font-bold text-primary">₺175</p>
-                  <p className="text-xs text-success">22/30 katıldı</p>
-                </div>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                <div className="h-full w-[73%] bg-gradient-primary" />
-              </div>
+
               <div className="grid grid-cols-3 gap-3 text-center">
                 {[
                   { icon: UtensilsCrossed, label: "120+ Menü" },
