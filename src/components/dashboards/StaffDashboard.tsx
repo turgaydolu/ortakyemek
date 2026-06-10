@@ -6,14 +6,20 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { UtensilsCrossed, Flame, Clock, Users } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { Label } from "../ui/label";
+import { toast } from "sonner";
 
 export function StaffDashboard() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [openRests, setOpenRests] = useState(0);
   const [activeCampaigns, setActiveCampaigns] = useState(0);
   const [myOrders, setMyOrders] = useState(0);
 
   const [liveCamps, setLiveCamps] = useState<any[]>([]);
+  const [selectedCampaign, setSelectedCampaign] = useState<any | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string>("");
 
   const loadDashboard = async () => {
     if (!user) return;
@@ -38,6 +44,36 @@ export function StaffDashboard() {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user]);
+
+  const joinCampaign = async (c: any, time: string | null) => {
+    if (!c || !profile) return;
+    if (!profile.store_id && profile.role !== "manager") return toast.error("Mağazanız yok");
+    
+    const { error } = await supabase.from("campaign_participants").insert({
+      campaign_id: c.id,
+      user_id: profile.id,
+      store_id: profile.store_id,
+      quantity: 1,
+      selected_delivery_time: time
+    });
+    
+    if (error) toast.error("Katılılamadı: " + error.message);
+    else toast.success("Kampanyaya katıldınız!");
+    
+    setSelectedCampaign(null);
+  };
+
+  const handleJoinClick = (c: any) => {
+    if (!profile) return toast.error("Giriş yapın");
+    if (!profile.store_id && profile.role !== "manager") return toast.error("Mağazanız yok");
+    
+    if (!c.delivery_time && !c.delivery_time_2) {
+      joinCampaign(c, null);
+    } else {
+      setSelectedCampaign(c);
+      setSelectedTime(c.delivery_time || "");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -148,8 +184,8 @@ export function StaffDashboard() {
                         <Users className="h-3 w-3" /> {currentParticipants} / {c.target_participants} Kişi
                       </span>
                     </div>
-                    <Button asChild size="sm" className="w-full mt-3 bg-gradient-primary text-primary-foreground hover:opacity-95">
-                      <Link to="/campaigns">{isFull ? "Tükendi" : "İncele & Katıl"}</Link>
+                    <Button onClick={() => handleJoinClick(c)} disabled={isFull} size="sm" className="w-full mt-3 bg-gradient-primary text-primary-foreground hover:opacity-95">
+                      {isFull ? "Tükendi" : "Katıl"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -158,6 +194,37 @@ export function StaffDashboard() {
           </div>
         )}
       </div>
+
+      <Dialog open={!!selectedCampaign} onOpenChange={(open) => !open && setSelectedCampaign(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Teslimat Saatini Seçin</DialogTitle>
+            <DialogDescription>
+              Lütfen kampanyaya katılmak için size uygun teslimat saatini seçin.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <RadioGroup value={selectedTime} onValueChange={setSelectedTime}>
+              {selectedCampaign?.delivery_time && (
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value={selectedCampaign.delivery_time} id="t1" />
+                  <Label htmlFor="t1">{new Date(selectedCampaign.delivery_time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} Teslimatı</Label>
+                </div>
+              )}
+              {selectedCampaign?.delivery_time_2 && (
+                <div className="flex items-center space-x-2 mt-2">
+                  <RadioGroupItem value={selectedCampaign.delivery_time_2} id="t2" />
+                  <Label htmlFor="t2">{new Date(selectedCampaign.delivery_time_2).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} Teslimatı</Label>
+                </div>
+              )}
+            </RadioGroup>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedCampaign(null)}>İptal</Button>
+            <Button onClick={() => joinCampaign(selectedCampaign, selectedTime)}>Katıl</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
