@@ -49,6 +49,12 @@ function Landing() {
               return new Date(c.expires_at).getTime() + 2 * 3600 * 1000 > Date.now();
             }
           }
+          
+          // Süresi dolmuş ve hedefi tamamlanmamış ("active" kalmış) kampanyaları gizle
+          if (c.status === "active" && new Date(c.expires_at).getTime() < Date.now()) {
+            return false;
+          }
+
           return true;
         });
         setCamps(filtered.slice(0, 6));
