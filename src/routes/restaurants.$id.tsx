@@ -18,6 +18,8 @@ import { Plus, Minus, Trash2, ShoppingCart, Flame, Timer, Users, Star, MessageSq
 import { Progress } from "../components/ui/progress";
 import { toast } from "sonner";
 
+import { sendNotificationFromTemplate } from "../lib/notifications";
+
 export const Route = createFileRoute("/restaurants/$id")({
   head: () => ({ meta: [{ title: "Menü — Ortak Yemek" }] }),
   component: () => (<RequireAuth><Page /></RequireAuth>),
@@ -134,8 +136,34 @@ function Page() {
       if (error.code === '23505') toast.error("Bu kampanyaya zaten katıldınız!");
       else toast.error(error.message);
     } else { 
-      toast.success("Kampanyaya katıldın!"); 
-      supabase.from("campaigns").select("*").eq("restaurant_id", id).in("status", ["active", "reached"]).order("expires_at").then(({ data }) => setCampaigns(data ?? []));
+      toast.success("Kampanyaya katıldınız!"); 
+      
+      sendNotificationFromTemplate(
+        "campaign_joined",
+        [profile.id],
+        {
+          campaignName: c.title,
+          restaurantName: rest?.name || "Lokanta",
+          userName: profile.full_name || "Personel",
+        },
+        "/campaigns"
+      );
+      
+      const currentParticipants = c.campaign_participants?.reduce((sum: number, p: any) => sum + (p.quantity || 1), 0) || 0;
+      if (currentParticipants + 1 >= c.target_participants && c.status === "active") {
+        const allUserIds = Array.from(new Set([...(c.campaign_participants?.map((p:any) => p.user_id) || []), profile.id]));
+        sendNotificationFromTemplate(
+          "campaign_completed",
+          allUserIds as string[],
+          {
+            campaignName: c.title,
+            restaurantName: rest?.name || "Lokanta"
+          },
+          "/campaigns"
+        );
+      }
+      
+      supabase.from("campaigns").select("*, campaign_participants(user_id, quantity)").eq("restaurant_id", id).in("status", ["active", "reached"]).order("expires_at").then(({ data }) => setCampaigns(data ?? []));
       setSelectedCampaign(null); 
     }
   };

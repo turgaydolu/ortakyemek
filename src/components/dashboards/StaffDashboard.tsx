@@ -11,6 +11,8 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Label } from "../ui/label";
 import { toast } from "sonner";
 
+import { sendNotificationFromTemplate } from "../../lib/notifications";
+
 export function StaffDashboard() {
   const { user, profile } = useAuth();
   const [openRests, setOpenRests] = useState(0);
@@ -57,8 +59,38 @@ export function StaffDashboard() {
       selected_delivery_time: time
     });
     
-    if (error) toast.error("Katılılamadı: " + error.message);
-    else toast.success("Kampanyaya katıldınız!");
+    if (error) {
+      toast.error("Katılılamadı: " + error.message);
+    } else {
+      toast.success("Kampanyaya katıldınız!");
+      // Send join notification
+      sendNotificationFromTemplate(
+        "campaign_joined",
+        [profile.id],
+        {
+          campaignName: c.title,
+          restaurantName: c.restaurants?.name || "Lokanta",
+          userName: profile.full_name || "Personel",
+        },
+        "/campaigns"
+      );
+      
+      // Check if target is reached
+      const currentParticipants = c.campaign_participants?.reduce((sum: number, p: any) => sum + (p.quantity || 1), 0) || 0;
+      if (currentParticipants + 1 >= c.target_participants && c.status === "active") {
+        // Find all participant IDs to notify them
+        const allUserIds = Array.from(new Set([...(c.campaign_participants?.map((p:any) => p.user_id) || []), profile.id]));
+        sendNotificationFromTemplate(
+          "campaign_completed",
+          allUserIds as string[],
+          {
+            campaignName: c.title,
+            restaurantName: c.restaurants?.name || "Lokanta"
+          },
+          "/campaigns"
+        );
+      }
+    }
     
     setSelectedCampaign(null);
   };

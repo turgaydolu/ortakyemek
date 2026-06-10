@@ -186,6 +186,27 @@ export type Database = {
           },
         ]
       }
+      notification_settings: {
+        Row: {
+          event_type: string
+          is_enabled: boolean
+          title_template: string
+          body_template: string
+        }
+        Insert: {
+          event_type: string
+          is_enabled?: boolean
+          title_template: string
+          body_template: string
+        }
+        Update: {
+          event_type?: string
+          is_enabled?: boolean
+          title_template?: string
+          body_template?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null

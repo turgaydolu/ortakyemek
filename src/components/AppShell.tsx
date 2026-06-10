@@ -36,6 +36,17 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 
+  useEffect(() => {
+    // Sadece admin ise kontrol edip sunucu yükünü azaltabiliriz, ama herkes için de zararı yok RPC hızlıdır.
+    if (user) {
+      supabase.rpc("process_expired_campaigns").catch(console.error);
+      const interval = setInterval(() => {
+        supabase.rpc("process_expired_campaigns").catch(console.error);
+      }, 5 * 60 * 1000); // Her 5 dakikada bir kontrol
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
   const unread = notifs.filter((n) => !n.read).length;
   const markRead = async () => {
     const ids = notifs.filter((n) => !n.read).map((n) => n.id);
@@ -58,7 +69,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
     : primaryRole === "manager"
     ? [{ to: "/app", label: "Panel" }, { to: "/restaurants", label: "Lokantalar" }, { to: "/campaigns", label: "Kampanyalar" }, { to: "/manager/team", label: "Ekip" }]
     : primaryRole === "admin"
-    ? [{ to: "/admin/approvals", label: "Onaylar" }, { to: "/admin/users", label: "Kullanıcı Yönetimi" }, { to: "/admin/reports", label: "Ciro & Raporlar" }]
+    ? [{ to: "/admin/approvals", label: "Onaylar" }, { to: "/admin/users", label: "Kullanıcı Yönetimi" }, { to: "/admin/reports", label: "Ciro & Raporlar" }, { to: "/admin/notifications", label: "Bildirim Ayarları" }]
     : [{ to: "/app", label: "Panel" }, { to: "/restaurants", label: "Lokantalar" }, { to: "/campaigns", label: "Kampanyalar" }, { to: "/my-orders", label: "Siparişlerim" }];
 
   return (

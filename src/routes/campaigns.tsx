@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { Label } from "../components/ui/label";
 
+import { sendNotificationFromTemplate } from "../lib/notifications";
+
 export const Route = createFileRoute("/campaigns")({
   head: () => ({ meta: [{ title: "Kampanyalar — Ortak Yemek" }] }),
   component: () => (<RequireAuth><Page /></RequireAuth>),
@@ -65,7 +67,37 @@ function Page() {
       quantity: 1,
       selected_delivery_time: time || null
     });
-    if (error) toast.error(error.message); else { toast.success("Kampanyaya katıldın!"); load(); setSelectedCampaign(null); }
+    if (error) {
+      toast.error("Katılılamadı");
+    } else {
+      toast.success("Kampanyaya katıldınız!");
+      sendNotificationFromTemplate(
+        "campaign_joined",
+        [profile.id],
+        {
+          campaignName: c.title,
+          restaurantName: c.restaurants?.name || "Lokanta",
+          userName: profile.full_name || "Personel",
+        },
+        "/campaigns"
+      );
+      
+      const currentParticipants = c.campaign_participants?.reduce((sum: number, p: any) => sum + (p.quantity || 1), 0) || 0;
+      if (currentParticipants + 1 >= c.target_participants && c.status === "active") {
+        const allUserIds = Array.from(new Set([...(c.campaign_participants?.map((p:any) => p.user_id) || []), profile.id]));
+        sendNotificationFromTemplate(
+          "campaign_completed",
+          allUserIds as string[],
+          {
+            campaignName: c.title,
+            restaurantName: c.restaurants?.name || "Lokanta"
+          },
+          "/campaigns"
+        );
+      }
+      load();
+    }
+    setSelectedCampaign(null);
   };
   
   const handleJoinClick = (c: Campaign) => {
