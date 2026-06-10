@@ -90,12 +90,13 @@ function Page() {
   };
 
   const save = async () => {
-    if (!profile?.restaurant_id || !form.name || !form.price) { toast.error("İsim ve fiyat zorunlu"); return; }
+    const fallbackPrice = form.price || form.dine_in_price || form.takeaway_price || form.mall_delivery_price;
+    if (!profile?.restaurant_id || !form.name || !fallbackPrice) { toast.error("İsim ve en az bir fiyat zorunlu"); return; }
     const payload: any = {
       restaurant_id: profile.restaurant_id,
       name: form.name, description: form.description || null, category: form.category || null,
-      price: Number(form.price),
-      combo_price: form.combo_price ? Number(form.combo_price) : null,
+      price: Number(fallbackPrice),
+      combo_price: null,
       takeaway_price: form.takeaway_price ? Number(form.takeaway_price) : null,
       mall_delivery_price: form.mall_delivery_price ? Number(form.mall_delivery_price) : null,
       dine_in_price: form.dine_in_price ? Number(form.dine_in_price) : null,
