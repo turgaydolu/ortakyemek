@@ -110,31 +110,6 @@ export function StaffDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="bg-gradient-warm shadow-warm border-primary/20">
-          <CardHeader><CardTitle className="font-display">Sipariş ver</CardTitle></CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">AVM'deki tüm lokantaları gezin, menülere göz atın ve hemen sipariş verin.</p>
-            <Button asChild className="mt-4 bg-gradient-primary text-primary-foreground hover:opacity-95">
-              <Link to="/restaurants">Lokantalara Göz At</Link>
-            </Button>
-          </CardContent>
-        </Card>
-        <Card className="shadow-soft border-primary/20">
-          <CardHeader>
-            <CardTitle className="font-display flex items-center gap-2">
-              <Flame className="h-5 w-5 text-primary" /> Kampanyalar
-              <Badge className="ml-auto bg-primary text-primary-foreground animate-pulse">CANLI</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">Grup kampanyalara katıl, ekibinle birlikte indirim kazan.</p>
-            <Button asChild variant="outline" className="mt-4 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-              <Link to="/campaigns">Kampanyaları Gör</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {[
