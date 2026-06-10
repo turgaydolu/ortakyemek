@@ -50,6 +50,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold">Bir şeyler ters gitti</h1>
         <p className="mt-2 text-sm text-muted-foreground">Sayfayı yenilemeyi deneyin.</p>
+        <p className="mt-2 text-xs text-red-500 bg-red-50 p-2 rounded border border-red-100 font-mono">
+          {error?.message || "Bilinmeyen hata"}
+        </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => { router.invalidate(); reset(); }}

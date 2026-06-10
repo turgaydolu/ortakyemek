@@ -24,6 +24,7 @@ import { Route as RestaurantAccountingRouteImport } from './routes/restaurant.ac
 import { Route as ManagerTeamRouteImport } from './routes/manager.team'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminApprovalsRouteImport } from './routes/admin.approvals'
 
 const RestaurantsRoute = RestaurantsRouteImport.update({
@@ -101,6 +102,11 @@ const AdminReportsRoute = AdminReportsRouteImport.update({
   path: '/admin/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/admin/notifications',
+  path: '/admin/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminApprovalsRoute = AdminApprovalsRouteImport.update({
   id: '/admin/approvals',
   path: '/admin/approvals',
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin/approvals': typeof AdminApprovalsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/users': typeof AdminUsersRoute
   '/manager/team': typeof ManagerTeamRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin/approvals': typeof AdminApprovalsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/users': typeof AdminUsersRoute
   '/manager/team': typeof ManagerTeamRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin/approvals': typeof AdminApprovalsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/users': typeof AdminUsersRoute
   '/manager/team': typeof ManagerTeamRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/restaurants'
     | '/admin/approvals'
+    | '/admin/notifications'
     | '/admin/reports'
     | '/admin/users'
     | '/manager/team'
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/restaurants'
     | '/admin/approvals'
+    | '/admin/notifications'
     | '/admin/reports'
     | '/admin/users'
     | '/manager/team'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/restaurants'
     | '/admin/approvals'
+    | '/admin/notifications'
     | '/admin/reports'
     | '/admin/users'
     | '/manager/team'
@@ -228,6 +240,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   RestaurantsRoute: typeof RestaurantsRouteWithChildren
   AdminApprovalsRoute: typeof AdminApprovalsRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   ManagerTeamRoute: typeof ManagerTeamRoute
@@ -344,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/admin/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/approvals': {
       id: '/admin/approvals'
       path: '/admin/approvals'
@@ -375,6 +395,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   RestaurantsRoute: RestaurantsRouteWithChildren,
   AdminApprovalsRoute: AdminApprovalsRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminUsersRoute: AdminUsersRoute,
   ManagerTeamRoute: ManagerTeamRoute,

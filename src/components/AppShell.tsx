@@ -39,9 +39,9 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   useEffect(() => {
     // Sadece admin ise kontrol edip sunucu yükünü azaltabiliriz, ama herkes için de zararı yok RPC hızlıdır.
     if (user) {
-      supabase.rpc("process_expired_campaigns").catch(console.error);
+      supabase.rpc("process_expired_campaigns" as any).then(({error}) => { if (error) console.error(error); });
       const interval = setInterval(() => {
-        supabase.rpc("process_expired_campaigns").catch(console.error);
+        supabase.rpc("process_expired_campaigns" as any).then(({error}) => { if (error) console.error(error); });
       }, 5 * 60 * 1000); // Her 5 dakikada bir kontrol
       return () => clearInterval(interval);
     }
