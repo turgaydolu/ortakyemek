@@ -63,7 +63,14 @@ function Landing() {
     return () => clearInterval(t);
   }, []);
 
-  const fmt = (ms: number) => { if (ms <= 0) return "Süre doldu"; const m = Math.floor(ms/60000); const s = Math.floor((ms%60000)/1000); return `${m}:${s.toString().padStart(2,"0")}`; };
+  const fmt = (ms: number) => { 
+    if (ms <= 0) return "Süre doldu"; 
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    if (h > 0) return `${h}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+    return `${m}:${s.toString().padStart(2,"0")}`; 
+  };
 
   return (
     <div className="min-h-screen bg-gradient-hero">

@@ -148,7 +148,14 @@ function Page() {
     }
   };
 
-  const fmt = (ms: number) => { if (ms <= 0) return "Süre doldu"; const m = Math.floor(ms/60000); const s = Math.floor((ms%60000)/1000); return `${m}:${s.toString().padStart(2,"0")}`; };
+  const fmt = (ms: number) => { 
+    if (ms <= 0) return "Süre doldu"; 
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    if (h > 0) return `${h}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+    return `${m}:${s.toString().padStart(2,"0")}`; 
+  };
 
   return (
     <AppShell title="Kampanyalarım">
@@ -218,7 +225,7 @@ function Page() {
       {camps.length === 0 ? (
         <Card><CardContent className="py-16 text-center text-muted-foreground">Henüz kampanyanız yok.</CardContent></Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 grid-cols-1">
           {camps.map((c) => {
             const pct = Math.min(100, (c.current_participants / c.target_participants) * 100);
             const ms = new Date(c.expires_at).getTime() - now;
