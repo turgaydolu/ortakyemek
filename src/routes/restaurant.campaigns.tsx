@@ -36,6 +36,7 @@ function Page() {
     supabase.from("campaigns")
       .select("*, campaign_participants(quantity, stores(name))")
       .eq("restaurant_id", profile.restaurant_id)
+      .in("status", ["active", "reached", "confirmed", "cancelled"])
       .order("created_at", { ascending: false })
       .then(({ data }) => setCamps(data ?? []));
       
@@ -81,18 +82,17 @@ function Page() {
   };
 
   const remove = async (c: any) => {
-    if (!window.confirm("Bu kampanyayı kalıcı olarak silmek istediğine emin misin?")) return;
+    if (!window.confirm("Bu kampanyayı silmek istediğinize emin misiniz? (Geçmiş cironuz kaybolmaz)")) return;
     
-    // Önce bu kampanyaya ait katılımcı kayıtlarını siliyoruz (Foreign Key hatasını önlemek için)
-    await supabase.from("campaign_participants").delete().eq("campaign_id", c.id);
+    const newStatus = c.status === "confirmed" ? "archived_confirmed" : "archived_cancelled";
     
-    const { error } = await supabase.from("campaigns").delete().eq("id", c.id);
+    const { error } = await supabase.from("campaigns").update({ status: newStatus }).eq("id", c.id);
     if (error) {
       toast.error("Hata: " + error.message);
       return;
     }
     load();
-    toast.success("Kampanya kalıcı olarak silindi.");
+    toast.success("Kampanya listeden kaldırıldı.");
   };
 
   const handleReactivate = (c: any) => {

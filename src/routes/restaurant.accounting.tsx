@@ -28,7 +28,7 @@ function Page() {
           campaign_participants ( quantity, user_id, profiles ( full_name ), stores ( name ) )
         `)
         .eq("restaurant_id", profile.restaurant_id)
-        .in("status", ["active", "reached", "confirmed"]),
+        .in("status", ["active", "reached", "confirmed", "archived_confirmed"]),
       supabase.from("orders")
         .select(`
           id, created_at, total_amount, user_id,
