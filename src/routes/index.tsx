@@ -201,10 +201,9 @@ function Landing() {
           </div>
         </section>
 
-        <section className="grid gap-6 py-12 md:grid-cols-3">
+        <section className="grid gap-6 py-12 md:grid-cols-2 max-w-4xl mx-auto">
           {[
             { icon: Users, title: "Personel", desc: "Bireysel sipariş ver, mağaza arkadaşlarınla toplu sipariş yap, kampanyalara katıl." },
-            { icon: Store, title: "Mağaza Müdürü", desc: "Mağaza personelini yönet, toplu sipariş aç, ayrılan personeli sistemden çıkar." },
             { icon: UtensilsCrossed, title: "Lokanta", desc: "Menünü ve fiyatlarını yönet, kampanya başlat, gelen siparişleri onayla." },
           ].map((f) => (
             <div key={f.title} className="rounded-2xl border bg-card p-6 shadow-soft transition hover:shadow-warm">
