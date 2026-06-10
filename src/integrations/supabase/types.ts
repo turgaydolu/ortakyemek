@@ -135,6 +135,7 @@ export type Database = {
           id: string
           image_url: string | null
           mall_delivery_price: number | null
+          dine_in_price: number | null
           name: string
           price: number
           restaurant_id: string
@@ -151,6 +152,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           mall_delivery_price?: number | null
+          dine_in_price?: number | null
           name: string
           price: number
           restaurant_id: string
@@ -167,6 +169,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           mall_delivery_price?: number | null
+          dine_in_price?: number | null
           name?: string
           price?: number
           restaurant_id?: string
@@ -359,6 +362,7 @@ export type Database = {
           restaurant_id: string | null
           store_id: string | null
           updated_at: string
+          approved: boolean
         }
         Insert: {
           created_at?: string
@@ -369,6 +373,7 @@ export type Database = {
           restaurant_id?: string | null
           store_id?: string | null
           updated_at?: string
+          approved?: boolean
         }
         Update: {
           created_at?: string
@@ -379,6 +384,7 @@ export type Database = {
           restaurant_id?: string | null
           store_id?: string | null
           updated_at?: string
+          approved?: boolean
         }
         Relationships: [
           {
@@ -441,6 +447,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      restaurant_reviews: {
+        Row: {
+          id: string
+          restaurant_id: string
+          user_id: string
+          rating: number
+          comment: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          restaurant_id: string
+          user_id: string
+          rating: number
+          comment?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          restaurant_id?: string
+          user_id?: string
+          rating?: number
+          comment?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_reviews_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       stores: {
         Row: {
@@ -514,7 +555,9 @@ export type Database = {
         | "expired"
         | "cancelled"
         | "completed"
-      delivery_method: "delivery" | "takeaway" | "dine_in"
+        | "archived_confirmed"
+        | "archived_cancelled"
+      delivery_method: "delivery" | "takeaway" | "dine_in" | "mall_delivery"
       order_status:
         | "pending"
         | "approved"
@@ -666,8 +709,10 @@ export const Constants = {
         "expired",
         "cancelled",
         "completed",
+        "archived_confirmed",
+        "archived_cancelled",
       ],
-      delivery_method: ["delivery", "takeaway", "dine_in"],
+      delivery_method: ["delivery", "takeaway", "dine_in", "mall_delivery"],
       order_status: [
         "pending",
         "approved",

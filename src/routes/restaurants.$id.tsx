@@ -156,14 +156,19 @@ function Page() {
                     const dDate = new Date(c.delivery_time);
                     const today = new Date();
                     const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1);
-                    const timeStr = dDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                    
+                    let timeStr = dDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                    if (c.delivery_time_2) {
+                      const dDate2 = new Date(c.delivery_time_2);
+                      timeStr += ` veya ${dDate2.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
+                    }
                     
                     if (dDate.getDate() === today.getDate() && dDate.getMonth() === today.getMonth()) {
-                      deliveryText = `Bugün ${timeStr}`;
+                      deliveryText = `Bugün Gel Al (${timeStr})`;
                     } else if (dDate.getDate() === tomorrow.getDate() && dDate.getMonth() === tomorrow.getMonth()) {
-                      deliveryText = `Yarın Teslim (${timeStr})`;
+                      deliveryText = `Yarın Gel Al (${timeStr})`;
                     } else {
-                      deliveryText = `${dDate.toLocaleDateString('tr-TR')} ${timeStr} için sipariş ver`;
+                      deliveryText = `${dDate.toLocaleDateString('tr-TR')} ${timeStr} için Gel Al`;
                     }
                   }
                   return (

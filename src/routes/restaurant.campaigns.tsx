@@ -108,15 +108,16 @@ function Page() {
 
   const handleReactivate = (c: any) => {
     setForm({
-      title: c.title || "",
+      title: c.title,
       description: c.description || "",
-      item_name: c.item_name || "",
-      price: String(c.price || ""),
-      target_participants: String(c.target_participants || "10"),
-      duration_hours: "24",
-      free_delivery: c.free_delivery ?? true,
-      delivery_date: "",
-      delivery_time: "",
+      item_name: c.item_name,
+      price: String(c.price),
+      target_participants: String(c.target_participants),
+      duration_hours: String((new Date(c.expires_at).getTime() - new Date(c.created_at).getTime()) / 3600000),
+      free_delivery: c.free_delivery,
+      delivery_date: c.delivery_time ? new Date(c.delivery_time).toISOString().split('T')[0] : "",
+      delivery_time: c.delivery_time ? new Date(c.delivery_time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : "",
+      delivery_time_2: c.delivery_time_2 ? new Date(c.delivery_time_2).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : "",
       image_url: c.image_url || "",
       delivery_method: c.delivery_method || "mall_delivery"
     });
@@ -182,7 +183,7 @@ function Page() {
                   const m = menuItems.find(x => x.id === id);
                   if (m) {
                     const basePrice = m.price || m.dine_in_price || m.takeaway_price || m.mall_delivery_price || 0;
-                    setForm({ ...form, title: m.name + " Kampanyası", item_name: m.name, price: String(basePrice), description: m.description || "", image_url: m.image_url || "" });
+                    setForm({ ...form, title: m.name + " Kampanyası", item_name: m.name, price: String(basePrice), description: m.description || "", image_url: m.image_url || "", delivery_time_2: form.delivery_time_2 });
                   }
                 }}>
                   <SelectTrigger><SelectValue placeholder="Menüden bir ürün seçin veya manuel girin" /></SelectTrigger>
