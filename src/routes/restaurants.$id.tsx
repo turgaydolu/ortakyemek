@@ -139,11 +139,18 @@ function Page() {
           {campaigns.length > 0 && (
             <div className="mb-6 space-y-3">
               <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2"><Flame className="h-5 w-5" /> Aktif Kampanyalar</h2>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-4 grid-cols-1">
                 {campaigns.map(c => {
                   const ms = new Date(c.expires_at).getTime() - now;
                   const pct = Math.min(100, (c.current_participants / c.target_participants) * 100);
-                  const fmt = (ms: number) => { if (ms <= 0) return "Süre doldu"; const m = Math.floor(ms/60000); const s = Math.floor((ms%60000)/1000); return `${m}:${s.toString().padStart(2,"0")}`; };
+                  const fmt = (ms: number) => { 
+                    if (ms <= 0) return "Süre doldu"; 
+                    const h = Math.floor(ms / 3600000);
+                    const m = Math.floor((ms % 3600000) / 60000);
+                    const s = Math.floor((ms % 60000) / 1000);
+                    if (h > 0) return `${h}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+                    return `${m}:${s.toString().padStart(2,"0")}`; 
+                  };
                   return (
                     <Card key={c.id} className="shadow-warm border-primary/20 bg-primary/5">
                       <CardContent className="p-4">
