@@ -83,6 +83,7 @@ function Landing() {
         <div className="hidden lg:flex items-center gap-6 text-xs font-medium text-muted-foreground">
           <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" /> Güvenli ödeme</span>
           <span className="flex items-center gap-1.5"><BellRing className="h-4 w-4 text-primary" /> Anlık kampanyalar</span>
+          <span className="flex items-center gap-1.5"><Timer className="h-4 w-4 text-primary" /> Ön sipariş ile gecikme derdine son</span>
         </div>
 
         <div className="flex items-center gap-2">
