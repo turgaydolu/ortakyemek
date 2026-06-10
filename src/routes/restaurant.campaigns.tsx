@@ -30,6 +30,7 @@ function Page() {
   const [isUploading, setIsUploading] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_hours: "24", free_delivery: true, delivery_date: "", delivery_time: "", delivery_time_2: "", image_url: "", delivery_method: "mall_delivery" });
   const [now, setNow] = useState(Date.now());
+  const [restaurantSettings, setRestaurantSettings] = useState<any>(null);
 
   const load = () => {
     if (!profile?.restaurant_id) return;
@@ -45,6 +46,12 @@ function Page() {
       .eq("restaurant_id", profile.restaurant_id)
       .eq("available", true)
       .then(({ data }) => setMenuItems(data ?? []));
+
+    supabase.from("restaurants")
+      .select("allow_takeaway, allow_dine_in")
+      .eq("id", profile.restaurant_id)
+      .single()
+      .then(({ data }) => setRestaurantSettings(data));
   };
   useEffect(load, [profile]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
@@ -222,8 +229,12 @@ function Page() {
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="mall_delivery">🛵 AVM İçi Teslimat</SelectItem>
-                      <SelectItem value="takeaway">🛍️ Gel Al</SelectItem>
-                      <SelectItem value="dine_in">🍽️ Masaya Servis</SelectItem>
+                      {restaurantSettings?.allow_takeaway !== false && (
+                        <SelectItem value="takeaway">🛍️ Gel Al (Yarın Gel Al)</SelectItem>
+                      )}
+                      {restaurantSettings?.allow_dine_in !== false && (
+                        <SelectItem value="dine_in">🍽️ Masaya Servis</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

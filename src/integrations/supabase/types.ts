@@ -417,6 +417,8 @@ export type Database = {
           owner_id: string
           status: Database["public"]["Enums"]["restaurant_status"]
           updated_at: string
+          allow_takeaway: boolean | null
+          allow_dine_in: boolean | null
         }
         Insert: {
           created_at?: string
@@ -431,6 +433,8 @@ export type Database = {
           owner_id: string
           status?: Database["public"]["Enums"]["restaurant_status"]
           updated_at?: string
+          allow_takeaway?: boolean | null
+          allow_dine_in?: boolean | null
         }
         Update: {
           created_at?: string
@@ -445,6 +449,8 @@ export type Database = {
           owner_id?: string
           status?: Database["public"]["Enums"]["restaurant_status"]
           updated_at?: string
+          allow_takeaway?: boolean | null
+          allow_dine_in?: boolean | null
         }
         Relationships: []
       }

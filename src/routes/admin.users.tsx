@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { toast } from "sonner";
+import { Switch } from "../components/ui/switch";
 import { Pencil, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/users")({
@@ -24,7 +25,10 @@ function AdminUsers() {
   const [stores, setStores] = useState<any[]>([]);
   
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ full_name: "", phone: "", store_id: "", restaurant_id: "" });
+  const [editForm, setEditForm] = useState({ 
+    full_name: "", phone: "", store_id: "", restaurant_id: "",
+    allow_takeaway: true, allow_dine_in: true
+  });
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -39,7 +43,7 @@ function AdminUsers() {
       .select(`
         id, full_name, phone, created_at, store_id, restaurant_id,
         stores ( name ),
-        restaurants ( name )
+        restaurants ( name, allow_takeaway, allow_dine_in )
       `)
       .eq("onboarded", true)
       .eq("approved", true);
@@ -94,6 +98,8 @@ function AdminUsers() {
       phone: user.phone || "",
       store_id: user.store_id || "none",
       restaurant_id: user.restaurant_id || "none",
+      allow_takeaway: user.restaurants?.allow_takeaway ?? true,
+      allow_dine_in: user.restaurants?.allow_dine_in ?? true,
     });
   };
 
@@ -110,6 +116,14 @@ function AdminUsers() {
     };
 
     const { error } = await supabase.from("profiles").update(updates).eq("id", editingUser.id);
+    
+    if (editingUser.role === "restaurant" && updates.restaurant_id) {
+      await supabase.from("restaurants").update({
+        allow_takeaway: editForm.allow_takeaway,
+        allow_dine_in: editForm.allow_dine_in
+      }).eq("id", updates.restaurant_id);
+    }
+
     if (error) {
       toast.error("Güncellenemedi: " + error.message);
     } else {
@@ -195,18 +209,33 @@ function AdminUsers() {
               </div>
               
               {editingUser.role === "restaurant" && (
-                <div className="space-y-2">
-                  <Label>Lokanta</Label>
-                  <Select value={editForm.restaurant_id} onValueChange={v => setEditForm({ ...editForm, restaurant_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Lokanta seçin" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Bağlantıyı Kaldır</SelectItem>
-                      {restaurants.map(r => (
-                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label>Lokanta</Label>
+                    <Select value={editForm.restaurant_id} onValueChange={v => setEditForm({ ...editForm, restaurant_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Lokanta seçin" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Bağlantıyı Kaldır</SelectItem>
+                        {restaurants.map(r => (
+                          <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {editForm.restaurant_id !== "none" && (
+                    <div className="space-y-4 pt-2 border-t mt-4">
+                      <Label className="text-muted-foreground font-semibold">Lokanta Seçenekleri</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="takeaway" className="cursor-pointer">Yarın Gel Al</Label>
+                        <Switch id="takeaway" checked={editForm.allow_takeaway} onCheckedChange={c => setEditForm({ ...editForm, allow_takeaway: c })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="dine_in" className="cursor-pointer">Masaya Servis</Label>
+                        <Switch id="dine_in" checked={editForm.allow_dine_in} onCheckedChange={c => setEditForm({ ...editForm, allow_dine_in: c })} />
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {(editingUser.role === "manager" || editingUser.role === "staff") && (
