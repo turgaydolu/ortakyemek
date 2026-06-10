@@ -28,7 +28,7 @@ function Page() {
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_min: "10", free_delivery: true, delivery_date: "", delivery_time: "", image_url: "", delivery_method: "mall_delivery" });
+  const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_hours: "24", free_delivery: true, delivery_date: "", delivery_time: "", image_url: "", delivery_method: "mall_delivery" });
   const [now, setNow] = useState(Date.now());
 
   const load = () => {
@@ -52,7 +52,7 @@ function Page() {
   const create = async () => {
     if (!profile?.restaurant_id || !form.title || !form.item_name || !form.price) { toast.error("Eksik alan"); return; }
     
-    const expires = new Date(Date.now() + Number(form.duration_min) * 60000).toISOString();
+    const expires = new Date(Date.now() + Number(form.duration_hours) * 3600000).toISOString();
     let delivery_time = null;
     if (form.delivery_date && form.delivery_time) {
       delivery_time = new Date(`${form.delivery_date}T${form.delivery_time}`).toISOString();
@@ -102,7 +102,7 @@ function Page() {
       item_name: c.item_name || "",
       price: String(c.price || ""),
       target_participants: String(c.target_participants || "10"),
-      duration_min: "10",
+      duration_hours: "24",
       free_delivery: c.free_delivery ?? true,
       delivery_date: "",
       delivery_time: "",
@@ -195,8 +195,8 @@ function Page() {
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div><Label>Fiyat ₺</Label><Input type="number" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} /></div>
-                <div><Label>Hedef Kişi</Label><Input type="number" value={form.target_participants} onChange={(e) => setForm({...form, target_participants: e.target.value})} /></div>
-                <div><Label>Katılım Süresi (dk)</Label><Input type="number" value={form.duration_min} onChange={(e) => setForm({...form, duration_min: e.target.value})} /></div>
+                <div><Label>Kişi Hedefi</Label><Input type="number" value={form.target_participants} onChange={(e) => setForm({...form, target_participants: e.target.value})} /></div>
+                <div><Label>Süre (Saat)</Label><Input type="number" value={form.duration_hours} onChange={(e) => setForm({...form, duration_hours: e.target.value})} /></div>
               </div>
               <div className="grid gap-4 rounded-lg border bg-secondary/20 p-3 sm:grid-cols-2">
                 <div><Label>İleri Tarihli Sipariş (Tarih)</Label><Input type="date" value={form.delivery_date} onChange={(e) => setForm({...form, delivery_date: e.target.value})} /></div>
