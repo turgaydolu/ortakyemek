@@ -64,8 +64,10 @@ function Page() {
 
   const fmt = (ms: number) => {
     if (ms <= 0) return "Süre doldu";
-    const m = Math.floor(ms / 60000); const s = Math.floor((ms % 60000) / 1000);
-    return `${m}:${s.toString().padStart(2, "0")}`;
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    if (h > 0) return `${h} saat ${m} dk`;
+    return `${m} dakika`;
   };
 
   return (
@@ -79,6 +81,23 @@ function Page() {
             const ms = new Date(c.expires_at).getTime() - now;
             const isJoined = joined.has(c.id);
             const full = c.current_participants >= c.target_participants;
+            
+            let deliveryText = null;
+            if (c.delivery_time) {
+              const dDate = new Date(c.delivery_time);
+              const today = new Date();
+              const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1);
+              const timeStr = dDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+              
+              if (dDate.getDate() === today.getDate() && dDate.getMonth() === today.getMonth()) {
+                deliveryText = `Bugün ${timeStr}`;
+              } else if (dDate.getDate() === tomorrow.getDate() && dDate.getMonth() === tomorrow.getMonth()) {
+                deliveryText = `Yarın için sipariş ver (${timeStr})`;
+              } else {
+                deliveryText = `${dDate.toLocaleDateString('tr-TR')} ${timeStr} için sipariş ver`;
+              }
+            }
+            
             return (
               <Card key={c.id} className="overflow-hidden shadow-warm">
                 <div className="bg-gradient-primary px-5 py-4 text-primary-foreground">
@@ -88,6 +107,12 @@ function Page() {
                   </div>
                   <h3 className="mt-3 font-display text-2xl font-bold">{c.title}</h3>
                   <p className="text-sm opacity-90">{c.item_name}</p>
+                  
+                  {deliveryText && (
+                    <div className="mt-3 text-xs font-semibold bg-white/20 inline-block px-2 py-1 rounded">
+                      {deliveryText}
+                    </div>
+                  )}
                 </div>
                 {c.image_url && (
                   <div className="aspect-video w-full overflow-hidden bg-secondary/20">

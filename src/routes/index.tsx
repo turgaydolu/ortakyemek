@@ -67,9 +67,8 @@ function Landing() {
     if (ms <= 0) return "Süre doldu"; 
     const h = Math.floor(ms / 3600000);
     const m = Math.floor((ms % 3600000) / 60000);
-    const s = Math.floor((ms % 60000) / 1000);
-    if (h > 0) return `${h}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
-    return `${m}:${s.toString().padStart(2,"0")}`; 
+    if (h > 0) return `${h} saat ${m} dk`;
+    return `${m} dakika`; 
   };
 
   return (
@@ -115,6 +114,21 @@ function Landing() {
             {camps.map(c => {
               const ms = new Date(c.expires_at).getTime() - now;
               const pct = Math.min(100, (c.current_participants / c.target_participants) * 100);
+              let deliveryText = null;
+              if (c.delivery_time) {
+                const dDate = new Date(c.delivery_time);
+                const today = new Date();
+                const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1);
+                const timeStr = dDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                
+                if (dDate.getDate() === today.getDate() && dDate.getMonth() === today.getMonth()) {
+                  deliveryText = `Bugün ${timeStr}`;
+                } else if (dDate.getDate() === tomorrow.getDate() && dDate.getMonth() === tomorrow.getMonth()) {
+                  deliveryText = `Yarın için sipariş ver (${timeStr})`;
+                } else {
+                  deliveryText = `${dDate.toLocaleDateString('tr-TR')} ${timeStr} için sipariş ver`;
+                }
+              }
               return (
                 <Card key={c.id} className="overflow-hidden shadow-soft transition hover:shadow-warm group">
                   {c.image_url ? (
@@ -130,6 +144,12 @@ function Landing() {
                     <p className="text-xs font-semibold text-primary">{c.restaurants?.name}</p>
                     <h3 className="mt-1 font-display text-lg font-bold">{c.title}</h3>
                     <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{c.description || c.item_name}</p>
+
+                    {deliveryText && (
+                      <div className="mt-3 text-xs font-semibold text-primary bg-primary/10 inline-block px-2 py-1 rounded">
+                        {deliveryText}
+                      </div>
+                    )}
                     
                     <div className="mt-3 flex flex-wrap gap-2">
                       <span className="inline-flex items-center gap-1 rounded-md bg-secondary/50 px-2 py-1 text-xs font-medium text-secondary-foreground">
