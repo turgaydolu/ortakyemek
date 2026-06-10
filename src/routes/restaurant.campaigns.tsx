@@ -80,6 +80,22 @@ function Page() {
     load();
   };
 
+  const handleReactivate = (c: any) => {
+    setForm({
+      title: c.title || "",
+      description: c.description || "",
+      item_name: c.item_name || "",
+      price: String(c.price || ""),
+      target_participants: String(c.target_participants || "10"),
+      duration_min: "10",
+      free_delivery: c.free_delivery ?? true,
+      delivery_date: "",
+      delivery_time: "",
+      image_url: c.image_url || ""
+    });
+    setOpen(true);
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -221,6 +237,11 @@ function Page() {
                   )}
                   {c.status === "reached" && <Button onClick={() => confirm(c)} className="w-full bg-success text-success-foreground">Onayla ve Hazırla</Button>}
                   {(c.status === "active" || c.status === "reached") && <Button onClick={() => cancel(c)} variant="outline" className="w-full">İptal</Button>}
+                  {(c.status === "cancelled" || c.status === "confirmed" || (c.status === "active" && ms <= 0)) && (
+                    <Button onClick={() => handleReactivate(c)} variant="secondary" className="w-full mt-2 border-primary text-primary hover:bg-primary/10">
+                      Düzenle ve Tekrar Başlat
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             );
