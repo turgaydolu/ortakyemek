@@ -82,7 +82,15 @@ function Page() {
 
   const remove = async (c: any) => {
     if (!window.confirm("Bu kampanyayı kalıcı olarak silmek istediğine emin misin?")) return;
-    await supabase.from("campaigns").delete().eq("id", c.id);
+    
+    // Önce bu kampanyaya ait katılımcı kayıtlarını siliyoruz (Foreign Key hatasını önlemek için)
+    await supabase.from("campaign_participants").delete().eq("campaign_id", c.id);
+    
+    const { error } = await supabase.from("campaigns").delete().eq("id", c.id);
+    if (error) {
+      toast.error("Hata: " + error.message);
+      return;
+    }
     load();
     toast.success("Kampanya kalıcı olarak silindi.");
   };
