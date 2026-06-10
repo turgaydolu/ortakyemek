@@ -5,14 +5,14 @@ import { RequireAuth } from "../lib/auth-guard";
 import { AppShell } from "../components/AppShell";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { UtensilsCrossed, Clock } from "lucide-react";
+import { UtensilsCrossed, Clock, Star } from "lucide-react";
 
 export const Route = createFileRoute("/restaurants")({
   head: () => ({ meta: [{ title: "Lokantalar — Ortak Yemek" }] }),
   component: () => (<RequireAuth><Page /></RequireAuth>),
 });
 
-interface Rest { id: string; name: string; cuisine: string | null; description: string | null; status: string; min_order_amount: number; delivery_note: string | null }
+interface Rest { id: string; name: string; cuisine: string | null; description: string | null; status: string; min_order_amount: number; delivery_note: string | null; restaurant_reviews?: { rating: number }[] }
 
 const S: Record<string, { label: string; cls: string }> = {
   open: { label: "Açık", cls: "bg-success text-success-foreground" },
@@ -23,7 +23,7 @@ const S: Record<string, { label: string; cls: string }> = {
 function Page() {
   const [rests, setRests] = useState<Rest[]>([]);
   useEffect(() => {
-    supabase.from("restaurants").select("id,name,cuisine,description,status,min_order_amount,delivery_note").order("status").then(({ data }) => setRests((data ?? []) as Rest[]));
+    supabase.from("restaurants").select("id,name,cuisine,description,status,min_order_amount,delivery_note, restaurant_reviews(rating)").order("status").then(({ data }) => setRests((data ?? []) as Rest[]));
   }, []);
 
   return (
@@ -41,6 +41,13 @@ function Page() {
                     <Badge className={st.cls}>{st.label}</Badge>
                   </div>
                   <h3 className="mt-3 font-display text-lg font-semibold">{r.name}</h3>
+                  {r.restaurant_reviews && r.restaurant_reviews.length > 0 && (
+                    <div className="mt-1 flex items-center gap-1 text-xs font-medium text-warning">
+                      <Star className="h-3 w-3 fill-warning" />
+                      {(r.restaurant_reviews.reduce((a, b) => a + b.rating, 0) / r.restaurant_reviews.length).toFixed(1)}
+                      <span className="text-muted-foreground ml-1">({r.restaurant_reviews.length})</span>
+                    </div>
+                  )}
                   {r.cuisine && <p className="text-xs text-muted-foreground">{r.cuisine}</p>}
                   {r.description && <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{r.description}</p>}
                   <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">

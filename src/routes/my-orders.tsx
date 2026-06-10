@@ -6,6 +6,11 @@ import { RequireAuth } from "../lib/auth-guard";
 import { AppShell } from "../components/AppShell";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../components/ui/dialog";
+import { Textarea } from "../components/ui/textarea";
+import { Star } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/my-orders")({
   head: () => ({ meta: [{ title: "Siparişlerim — Ortak Yemek" }] }),
@@ -24,6 +29,29 @@ const ST: Record<string, { label: string; cls: string }> = {
 function Page() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
+  const [reviewOrder, setReviewOrder] = useState<any>(null);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const submitReview = async () => {
+    if (!reviewOrder || !user) return;
+    setSubmitting(true);
+    const { error } = await supabase.from("restaurant_reviews").insert({
+      restaurant_id: reviewOrder.restaurant_id,
+      user_id: user.id,
+      order_id: reviewOrder.id,
+      rating,
+      comment
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Değerlendirmeniz alındı, teşekkürler!");
+      setReviewOrder(null);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -66,12 +94,31 @@ function Page() {
                     <span className="text-xs text-muted-foreground">{o.delivery_method} · {o.payment_method}</span>
                     <span className="font-display text-lg font-bold text-primary">₺{Number(o.total_amount).toFixed(2)}</span>
                   </div>
+                  {o.status === "delivered" && (
+                    <Button variant="outline" size="sm" className="w-full mt-3" onClick={() => { setReviewOrder(o); setRating(5); setComment(""); }}>
+                      <Star className="mr-2 h-4 w-4 text-warning fill-warning" /> Değerlendir
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             );
           })}
         </div>
       )}
+      <Dialog open={!!reviewOrder} onOpenChange={(v) => !v && setReviewOrder(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{reviewOrder?.restaurants?.name} Değerlendir</DialogTitle></DialogHeader>
+          <div className="flex justify-center gap-2 py-4">
+            {[1, 2, 3, 4, 5].map(r => (
+              <Star key={r} className={`h-8 w-8 cursor-pointer ${rating >= r ? "text-warning fill-warning" : "text-muted-foreground"}`} onClick={() => setRating(r)} />
+            ))}
+          </div>
+          <Textarea placeholder="Yorumunuz (İsteğe bağlı)" value={comment} onChange={e => setComment(e.target.value)} rows={3} />
+          <DialogFooter>
+            <Button disabled={submitting} onClick={submitReview} className="w-full bg-gradient-primary text-primary-foreground">Gönder</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

@@ -13,7 +13,7 @@ import { Textarea } from "../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "../components/ui/sheet";
-import { Plus, Minus, Trash2, ShoppingCart, Flame, Timer, Users } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingCart, Flame, Timer, Users, Star, MessageSquare } from "lucide-react";
 import { Progress } from "../components/ui/progress";
 import { toast } from "sonner";
 
@@ -34,6 +34,7 @@ function Page() {
   const [rest, setRest] = useState<Rest | null>(null);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [now, setNow] = useState(Date.now());
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderType, setOrderType] = useState<"individual" | "group">("individual");
@@ -46,6 +47,7 @@ function Page() {
     supabase.from("restaurants").select("id,name,status,min_order_amount,min_order_count,delivery_note").eq("id", id).single().then(({ data }) => setRest(data as Rest));
     supabase.from("menu_items").select("*").eq("restaurant_id", id).eq("available", true).order("category").then(({ data }) => setItems((data ?? []) as any));
     supabase.from("campaigns").select("*").eq("restaurant_id", id).in("status", ["active", "reached"]).order("expires_at").then(({ data }) => setCampaigns(data ?? []));
+    supabase.from("restaurant_reviews").select("*, profiles(full_name)").eq("restaurant_id", id).order("created_at", { ascending: false }).then(({ data }) => setReviews(data ?? []));
   }, [id]);
 
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
@@ -119,6 +121,15 @@ function Page() {
 
   return (
     <AppShell title={rest?.name}>
+      <div className="mb-4 flex items-center gap-3">
+        {reviews.length > 0 && (
+          <Badge variant="outline" className="flex items-center gap-1 border-warning/50 bg-warning/10 text-warning px-2 py-1">
+            <Star className="h-4 w-4 fill-warning" />
+            <span className="text-sm font-bold">{(reviews.reduce((a, b) => a + b.rating, 0) / reviews.length).toFixed(1)}</span>
+            <span className="text-muted-foreground">({reviews.length} değerlendirme)</span>
+          </Badge>
+        )}
+      </div>
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
           {rest?.delivery_note && (
@@ -180,6 +191,30 @@ function Page() {
             </div>
           ))}
           {items.length === 0 && <p className="py-12 text-center text-muted-foreground">Bu lokantanın henüz menüsü yok.</p>}
+
+          {reviews.length > 0 && (
+            <div className="mt-8">
+              <h2 className="mb-4 font-display text-xl font-bold flex items-center gap-2"><MessageSquare className="h-5 w-5" /> Müşteri Yorumları</h2>
+              <div className="space-y-3">
+                {reviews.map(r => (
+                  <Card key={r.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold text-sm">{r.profiles?.full_name || "İsimsiz"}</span>
+                        <div className="flex text-warning">
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <Star key={star} className={`h-3 w-3 ${r.rating >= star ? "fill-warning" : "text-muted/30"}`} />
+                          ))}
+                        </div>
+                      </div>
+                      {r.comment && <p className="text-sm text-muted-foreground">{r.comment}</p>}
+                      <span className="text-xs text-muted-foreground opacity-70 mt-2 block">{new Date(r.created_at).toLocaleDateString("tr-TR")}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="hidden lg:block">
