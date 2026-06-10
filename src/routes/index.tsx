@@ -33,7 +33,26 @@ function Landing() {
   }, [loading, user, profile, navigate]);
 
   useEffect(() => {
-    supabase.from("campaigns").select("*, restaurants(name)").in("status", ["active", "reached"]).order("created_at", { ascending: false }).limit(6).then(({ data }) => setCamps(data ?? []));
+    supabase.from("campaigns")
+      .select("*, restaurants(name)")
+      .in("status", ["active", "reached", "confirmed"])
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (!data) return;
+        const filtered = data.filter(c => {
+          if (c.status === "confirmed") {
+            if (c.delivery_time) {
+              return new Date(c.delivery_time).getTime() > Date.now();
+            } else {
+              // Teslimat saati belirtilmediyse süresi dolduktan sonra 2 saat daha ekranda kalır
+              return new Date(c.expires_at).getTime() + 2 * 3600 * 1000 > Date.now();
+            }
+          }
+          return true;
+        });
+        setCamps(filtered.slice(0, 6));
+      });
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
