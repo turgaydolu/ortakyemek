@@ -22,7 +22,8 @@ export const Route = createFileRoute("/campaigns")({
 });
 
 interface Campaign { id: string; restaurant_id: string; title: string; description: string | null; item_name: string; price: number; target_participants: number; current_participants: number; expires_at: string; status: string; free_delivery: boolean; image_url: string | null; delivery_time?: string; delivery_time_2?: string; }
-interface RestMap { [id: string]: string }
+interface RestInfo { name: string; owner_id: string; }
+interface RestMap { [id: string]: RestInfo }
 
 function Page() {
   const { user, profile } = useAuth();
@@ -38,8 +39,8 @@ function Page() {
     setCamps((c ?? []) as Campaign[]);
     const ids = Array.from(new Set((c ?? []).map((x: any) => x.restaurant_id)));
     if (ids.length) {
-      const { data: r } = await supabase.from("restaurants").select("id,name").in("id", ids);
-      const m: RestMap = {}; (r ?? []).forEach((x: any) => m[x.id] = x.name); setRests(m);
+      const { data: r } = await supabase.from("restaurants").select("id,name,owner_id").in("id", ids);
+      const m: RestMap = {}; (r ?? []).forEach((x: any) => m[x.id] = { name: x.name, owner_id: x.owner_id }); setRests(m);
     }
     if (user) {
       const { data: p } = await supabase.from("campaign_participants").select("campaign_id").eq("user_id", user.id);
@@ -77,7 +78,7 @@ function Page() {
         [profile.id],
         {
           campaignName: c.title,
-          restaurantName: c.restaurants?.name || "Lokanta",
+          restaurantName: rests[c.restaurant_id]?.name || "Lokanta",
           userName: profile.full_name || "Personel",
         },
         "/campaigns"
@@ -91,10 +92,21 @@ function Page() {
           allUserIds as string[],
           {
             campaignName: c.title,
-            restaurantName: c.restaurants?.name || "Lokanta"
+            restaurantName: rests[c.restaurant_id]?.name || "Lokanta"
           },
           "/campaigns"
         );
+        if (rests[c.restaurant_id]?.owner_id) {
+          sendNotificationFromTemplate(
+            "rest_campaign_completed",
+            [rests[c.restaurant_id].owner_id],
+            {
+              campaignName: c.title,
+              restaurantName: rests[c.restaurant_id]?.name || "Lokanta"
+            },
+            "/restaurant/campaigns"
+          );
+        }
       }
       load();
     }
@@ -160,7 +172,7 @@ function Page() {
               <Card key={c.id} className="overflow-hidden shadow-warm">
                 <div className="bg-gradient-primary px-5 py-4 text-primary-foreground">
                   <div className="flex items-center justify-between">
-                    <Badge className="bg-white/20 text-primary-foreground">{rests[c.restaurant_id] ?? "Lokanta"}</Badge>
+                    <Badge className="bg-white/20 text-primary-foreground">{rests[c.restaurant_id]?.name || "Lokanta"}</Badge>
                     <span className="flex items-center gap-1 text-sm font-mono font-bold"><Timer className="h-4 w-4" /> {fmt(ms)}</span>
                   </div>
                   <h3 className="mt-3 font-display text-2xl font-bold">{c.title}</h3>

@@ -161,6 +161,17 @@ function Page() {
           },
           "/campaigns"
         );
+        if (rest?.owner_id) {
+          sendNotificationFromTemplate(
+            "rest_campaign_completed",
+            [rest.owner_id],
+            {
+              campaignName: c.title,
+              restaurantName: rest.name || "Lokanta"
+            },
+            "/restaurant/campaigns"
+          );
+        }
       }
       
       supabase.from("campaigns").select("*, campaign_participants(user_id, quantity)").eq("restaurant_id", id).in("status", ["active", "reached"]).order("expires_at").then(({ data }) => setCampaigns(data ?? []));

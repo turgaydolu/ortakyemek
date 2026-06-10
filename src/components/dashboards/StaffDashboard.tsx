@@ -34,7 +34,7 @@ export function StaffDashboard() {
       supabase.from("restaurants").select("id", { count: "exact", head: true }).eq("status", "open"),
       supabase.from("campaigns").select("id", { count: "exact", head: true }).eq("status", "active"),
       supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-      supabase.from("campaigns").select("*, restaurants(name), campaign_participants(quantity)").in("status", ["active", "reached", "confirmed"]).order("expires_at").limit(6),
+      supabase.from("campaigns").select("*, restaurants(name, owner_id), campaign_participants(quantity)").in("status", ["active", "reached", "confirmed"]).order("expires_at").limit(6),
     ]);
     setOpenRests(r.count ?? 0);
     setActiveCampaigns(c.count ?? 0);
@@ -89,7 +89,6 @@ export function StaffDashboard() {
       // Check if target is reached
       const currentParticipants = c.campaign_participants?.reduce((sum: number, p: any) => sum + (p.quantity || 1), 0) || 0;
       if (currentParticipants + 1 >= c.target_participants && c.status === "active") {
-        // Find all participant IDs to notify them
         const allUserIds = Array.from(new Set([...(c.campaign_participants?.map((p:any) => p.user_id) || []), profile.id]));
         sendNotificationFromTemplate(
           "campaign_completed",
@@ -100,7 +99,19 @@ export function StaffDashboard() {
           },
           "/campaigns"
         );
+        if (c.restaurants?.owner_id) {
+          sendNotificationFromTemplate(
+            "rest_campaign_completed",
+            [c.restaurants.owner_id],
+            {
+              campaignName: c.title,
+              restaurantName: c.restaurants.name || "Lokanta"
+            },
+            "/restaurant/campaigns"
+          );
+        }
       }
+      loadDashboard();
     }
     
     setSelectedCampaign(null);

@@ -25,8 +25,10 @@ interface NotificationSetting {
 
 const EVENTS = [
   { id: "campaign_joined", label: "Kampanyaya Katılma (Personel)" },
-  { id: "campaign_completed", label: "Hedef Kişiye Ulaşma (Tamamlandı)" },
-  { id: "campaign_failed", label: "Süre Dolumu / İptal (Hedef Sağlanamadı)" }
+  { id: "campaign_completed", label: "Hedef Kişiye Ulaşma (Personel)" },
+  { id: "campaign_failed", label: "Süre Dolumu / İptal (Personel)" },
+  { id: "rest_campaign_completed", label: "Kampanya Başarılı (Lokanta)" },
+  { id: "rest_campaign_failed", label: "Kampanya İptal (Lokanta)" }
 ];
 
 function AdminNotifications() {
