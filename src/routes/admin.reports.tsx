@@ -185,15 +185,6 @@ function AdminReports() {
           <div className="grid gap-4 md:grid-cols-2">
             {campaigns.map(c => {
               const parts = c.campaign_participants || [];
-              const stores = parts.reduce((acc: any, p: any) => {
-                const time = p.selected_delivery_time 
-                  ? new Date(p.selected_delivery_time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) 
-                  : "Standart Saat";
-                if (!acc[time]) acc[time] = {};
-                const name = p.stores?.name || "Bilinmeyen Mağaza";
-                acc[time][name] = (acc[time][name] || 0) + (p.quantity || 1);
-                return acc;
-              }, {});
 
               return (
                 <Card key={c.id} className="shadow-soft flex flex-col">
@@ -220,20 +211,18 @@ function AdminReports() {
                     </div>
 
                     <div className="rounded-md border p-3 bg-secondary/20">
-                      <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><Users className="h-3.5 w-3.5" /> Katılımcı Mağazalar</div>
-                      {Object.keys(stores).length === 0 ? (
+                      <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><Users className="h-3.5 w-3.5" /> Katılımcılar</div>
+                      {parts.length === 0 ? (
                         <div className="text-xs text-muted-foreground">Henüz katılım yok.</div>
                       ) : (
-                        <div className="space-y-3">
-                          {Object.entries(stores).map(([time, s]: any) => (
-                            <div key={time}>
-                              <div className="text-xs font-bold text-primary">{time} Teslimatı</div>
-                              {Object.entries(s).map(([name, qty]) => (
-                                <div key={name} className="flex justify-between text-sm ml-2 border-l border-border pl-2">
-                                  <span>{name}</span>
-                                  <span className="font-medium">{String(qty)} Adet</span>
-                                </div>
-                              ))}
+                        <div className="space-y-1">
+                          {parts.map((p: any, i: number) => (
+                            <div key={p.id || i} className="flex justify-between text-sm border-b border-border/50 last:border-0 pb-1 last:pb-0">
+                              <div>
+                                <span className="font-medium text-primary">{p.profiles?.full_name ?? "Bilinmeyen Personel"}</span>
+                                <span className="text-xs text-muted-foreground ml-1">({p.stores?.name ?? "Mağaza Yok"})</span>
+                              </div>
+                              <span className="font-bold">{p.quantity || 1} Adet</span>
                             </div>
                           ))}
                         </div>

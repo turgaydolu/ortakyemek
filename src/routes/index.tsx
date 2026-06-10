@@ -186,7 +186,7 @@ function Landing() {
                     <div className="mt-5 flex items-center justify-between border-t pt-4">
                       <div className="text-sm font-medium text-muted-foreground blur-[5px] select-none">₺999.99</div>
                       <Button asChild size="sm" className="bg-gradient-primary text-primary-foreground">
-                        <Link to="/auth">Fiyatı Gör & Katıl</Link>
+                        <Link to="/auth">Kampanyaya Katıl</Link>
                       </Button>
                     </div>
                   </CardContent>
