@@ -161,7 +161,7 @@ function Page() {
                     if (dDate.getDate() === today.getDate() && dDate.getMonth() === today.getMonth()) {
                       deliveryText = `Bugün ${timeStr}`;
                     } else if (dDate.getDate() === tomorrow.getDate() && dDate.getMonth() === tomorrow.getMonth()) {
-                      deliveryText = `Yarın için sipariş ver (${timeStr})`;
+                      deliveryText = `Yarın Teslim (${timeStr})`;
                     } else {
                       deliveryText = `${dDate.toLocaleDateString('tr-TR')} ${timeStr} için sipariş ver`;
                     }
@@ -175,7 +175,7 @@ function Page() {
                         </div>
                         <p className="mt-1 text-sm">{c.item_name} - ₺{Number(c.price).toFixed(2)}</p>
                         {deliveryText && (
-                          <div className="mt-2 text-xs font-semibold text-primary bg-primary/10 inline-block px-2 py-1 rounded">
+                          <div className="mt-2 text-sm font-bold text-primary bg-primary/10 inline-block px-3 py-1.5 rounded-md">
                             {deliveryText}
                           </div>
                         )}

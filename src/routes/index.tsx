@@ -124,7 +124,7 @@ function Landing() {
                 if (dDate.getDate() === today.getDate() && dDate.getMonth() === today.getMonth()) {
                   deliveryText = `Bugün ${timeStr}`;
                 } else if (dDate.getDate() === tomorrow.getDate() && dDate.getMonth() === tomorrow.getMonth()) {
-                  deliveryText = `Yarın için sipariş ver (${timeStr})`;
+                  deliveryText = `Yarın Teslim (${timeStr})`;
                 } else {
                   deliveryText = `${dDate.toLocaleDateString('tr-TR')} ${timeStr} için sipariş ver`;
                 }
@@ -146,7 +146,7 @@ function Landing() {
                     <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{c.description || c.item_name}</p>
 
                     {deliveryText && (
-                      <div className="mt-3 text-xs font-semibold text-primary bg-primary/10 inline-block px-2 py-1 rounded">
+                      <div className="mt-3 text-sm font-bold text-primary bg-primary/10 inline-block px-3 py-1.5 rounded-md">
                         {deliveryText}
                       </div>
                     )}

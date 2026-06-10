@@ -92,7 +92,7 @@ function Page() {
               if (dDate.getDate() === today.getDate() && dDate.getMonth() === today.getMonth()) {
                 deliveryText = `Bugün ${timeStr}`;
               } else if (dDate.getDate() === tomorrow.getDate() && dDate.getMonth() === tomorrow.getMonth()) {
-                deliveryText = `Yarın için sipariş ver (${timeStr})`;
+                deliveryText = `Yarın Teslim (${timeStr})`;
               } else {
                 deliveryText = `${dDate.toLocaleDateString('tr-TR')} ${timeStr} için sipariş ver`;
               }
@@ -109,7 +109,7 @@ function Page() {
                   <p className="text-sm opacity-90">{c.item_name}</p>
                   
                   {deliveryText && (
-                    <div className="mt-3 text-xs font-semibold bg-white/20 inline-block px-2 py-1 rounded">
+                    <div className="mt-3 text-sm font-bold bg-white/20 inline-block px-3 py-1.5 rounded-md">
                       {deliveryText}
                     </div>
                   )}
