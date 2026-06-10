@@ -4,7 +4,7 @@ import { supabase } from "../../integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { UtensilsCrossed, Flame, Clock } from "lucide-react";
+import { UtensilsCrossed, Flame, Clock, Users } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
 
 export function StaffDashboard() {
@@ -98,6 +98,28 @@ export function StaffDashboard() {
             {liveCamps.map(c => {
               const currentParticipants = c.campaign_participants?.reduce((sum: number, p: any) => sum + (p.quantity || 1), 0) || 0;
               const isFull = currentParticipants >= c.target_participants;
+              
+              let deliveryText = null;
+              if (c.delivery_time) {
+                const dDate = new Date(c.delivery_time);
+                const today = new Date();
+                const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1);
+                
+                let timeStr = dDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                if (c.delivery_time_2) {
+                  const dDate2 = new Date(c.delivery_time_2);
+                  timeStr += ` veya ${dDate2.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
+                }
+                
+                if (dDate.getDate() === today.getDate() && dDate.getMonth() === today.getMonth()) {
+                  deliveryText = `Bugün Gel Al (${timeStr})`;
+                } else if (dDate.getDate() === tomorrow.getDate() && dDate.getMonth() === tomorrow.getMonth()) {
+                  deliveryText = `Yarın Gel Al (${timeStr})`;
+                } else {
+                  deliveryText = `${dDate.toLocaleDateString('tr-TR')} ${timeStr} için Gel Al`;
+                }
+              }
+
               return (
                 <Card key={c.id} className="shadow-soft overflow-hidden flex flex-col">
                   {c.image_url && (
@@ -109,14 +131,25 @@ export function StaffDashboard() {
                     <div className="text-xs font-semibold text-primary mb-1">{c.restaurants?.name}</div>
                     <h3 className="font-display font-bold text-lg mb-1">{c.title}</h3>
                     <p className="text-xs text-muted-foreground line-clamp-2 flex-1">{c.description || c.item_name}</p>
-                    <div className="mt-4 flex items-center justify-between">
-                      <span className="font-bold text-lg">₺{Number(c.price).toFixed(2)}</span>
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {currentParticipants} / {c.target_participants} Kişi
+                    
+                    {deliveryText && (
+                      <div className={`mt-2 font-bold inline-block px-3 py-1.5 rounded-md animate-pulse self-start ${
+                        deliveryText.includes("Yarın") 
+                          ? "bg-destructive text-destructive-foreground text-sm scale-105 transform origin-left shadow-sm" 
+                          : "bg-primary/10 text-primary text-xs"
+                      }`}>
+                        {deliveryText}
+                      </div>
+                    )}
+
+                    <div className="mt-4 flex items-center justify-between border-t pt-3">
+                      <span className="font-bold text-lg text-primary">₺{Number(c.price).toFixed(2)}</span>
+                      <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <Users className="h-3 w-3" /> {currentParticipants} / {c.target_participants} Kişi
                       </span>
                     </div>
-                    <Button asChild size="sm" className="w-full mt-4 bg-gradient-primary text-primary-foreground">
-                      <Link to="/campaigns">{isFull ? "Tükendi" : "Katıl"}</Link>
+                    <Button asChild size="sm" className="w-full mt-3 bg-gradient-primary text-primary-foreground hover:opacity-95">
+                      <Link to="/campaigns">{isFull ? "Tükendi" : "İncele & Katıl"}</Link>
                     </Button>
                   </CardContent>
                 </Card>

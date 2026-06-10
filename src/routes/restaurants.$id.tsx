@@ -180,7 +180,11 @@ function Page() {
                         </div>
                         <p className="mt-1 text-sm">{c.item_name} - ₺{Number(c.price).toFixed(2)}</p>
                         {deliveryText && (
-                          <div className="mt-2 text-sm font-bold text-primary bg-primary/10 inline-block px-3 py-1.5 rounded-md animate-pulse">
+                          <div className={`mt-2 font-bold inline-block px-3 py-1.5 rounded-md animate-pulse ${
+                            deliveryText.includes("Yarın")
+                              ? "bg-destructive text-destructive-foreground text-base scale-105 transform origin-left shadow-sm"
+                              : "bg-primary/10 text-primary text-sm"
+                          }`}>
                             {deliveryText}
                           </div>
                         )}

@@ -134,7 +134,11 @@ function Page() {
                   <p className="text-sm opacity-90">{c.item_name}</p>
                   
                   {deliveryText && (
-                    <div className="mt-3 text-sm font-bold bg-white/20 inline-block px-3 py-1.5 rounded-md animate-pulse">
+                    <div className={`mt-3 font-bold inline-block px-3 py-1.5 rounded-md animate-pulse ${
+                      deliveryText.includes("Yarın")
+                        ? "bg-white text-destructive text-base shadow-md scale-105 transform origin-left"
+                        : "bg-white/20 text-primary-foreground text-sm"
+                    }`}>
                       {deliveryText}
                     </div>
                   )}
