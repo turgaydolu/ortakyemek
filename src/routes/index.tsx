@@ -83,7 +83,6 @@ function Landing() {
         <div className="hidden lg:flex items-center gap-6 text-xs font-medium text-muted-foreground">
           <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" /> Güvenli ödeme</span>
           <span className="flex items-center gap-1.5"><BellRing className="h-4 w-4 text-primary" /> Anlık kampanyalar</span>
-          <span className="flex items-center gap-1.5"><Timer className="h-4 w-4 text-primary" /> 30 dk garantisi</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -97,9 +96,6 @@ function Landing() {
 
       <main className="container mx-auto px-4">
         <section className="py-16 text-center lg:py-28 max-w-4xl mx-auto">
-          <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-            <Timer className="h-3 w-3" /> 30 dakikada masanızda
-          </span>
           <h1 className="mt-6 text-balance text-5xl font-display font-bold leading-[1.05] lg:text-7xl">
             AVM'deki tüm lezzetler, <span className="text-primary">tek dokunuşta.</span>
           </h1>
