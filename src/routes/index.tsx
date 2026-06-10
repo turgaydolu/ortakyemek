@@ -114,24 +114,7 @@ function Landing() {
             </div>
           </div>
 
-          <div className="relative">
-            <div className="absolute -inset-4 -z-10 rounded-3xl bg-gradient-primary opacity-20 blur-3xl" />
-            <div className="grid gap-4 rounded-3xl bg-card p-6 shadow-warm">
 
-              <div className="grid grid-cols-3 gap-3 text-center">
-                {[
-                  { icon: UtensilsCrossed, label: "120+ Menü" },
-                  { icon: Store, label: "45 Lokanta" },
-                  { icon: Users, label: "2.1k Personel" },
-                ].map(({ icon: Icon, label }) => (
-                  <div key={label} className="rounded-xl bg-secondary/60 p-3">
-                    <Icon className="mx-auto h-5 w-5 text-primary" />
-                    <p className="mt-1 text-xs font-medium">{label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </section>
 
         <section className="py-12">
