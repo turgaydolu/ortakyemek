@@ -36,7 +36,7 @@ export function StaffDashboard() {
       supabase.from("campaigns").select("id", { count: "exact", head: true }).eq("status", "active"),
       supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("campaigns").select("*, restaurants(name, owner_id), campaign_participants(quantity)").in("status", ["active", "reached", "confirmed"]).order("expires_at").limit(6),
-      supabase.from("restaurants").select("id, name, menu_items(id, name, description, price)").eq("status", "open"),
+      supabase.from("restaurants").select("id, name, menu_items(id, name, description, price, image_url)").eq("status", "open"),
     ]);
     setOpenRests(r.count ?? 0);
     setActiveCampaigns(c.count ?? 0);
@@ -272,39 +272,45 @@ export function StaffDashboard() {
         </h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {restaurants.map(r => (
-            <Card key={r.id} className="shadow-soft flex flex-col overflow-hidden transition hover:shadow-warm">
-              <div className="bg-gradient-to-r from-secondary/40 to-secondary/10 px-5 py-4 border-b">
-                <h3 className="flex items-center gap-2 text-lg font-display font-bold">
-                  {r.name}
-                </h3>
-              </div>
-              <CardContent className="p-0 flex-1">
-                <div className="divide-y divide-border/50">
-                  {r.menu_items?.slice(0, 5).map((m: any) => (
-                    <div key={m.id} className="flex justify-between items-center p-4 hover:bg-secondary/5 transition">
-                      <div>
-                        <p className="font-medium text-sm">{m.name}</p>
-                        {m.description && <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{m.description}</p>}
-                      </div>
-                      <div className="text-sm font-bold text-primary ml-4">₺{Number(m.price).toFixed(2)}</div>
-                    </div>
-                  ))}
-                  {r.menu_items && r.menu_items.length > 5 && (
-                    <div className="p-3 text-center text-xs font-medium text-primary bg-primary/5">
-                      +{r.menu_items.length - 5} ürün daha
-                    </div>
-                  )}
-                  {(!r.menu_items || r.menu_items.length === 0) && (
-                    <div className="p-6 text-sm text-muted-foreground text-center italic">Menü yakında eklenecek...</div>
-                  )}
+            <Link key={r.id} to="/restaurants/$id" params={{ id: r.id }} className="block h-full transition hover:scale-[1.02]">
+              <Card className="shadow-soft h-full flex flex-col overflow-hidden border-transparent hover:border-primary/20">
+                <div className="bg-gradient-to-r from-secondary/40 to-secondary/10 px-5 py-4 border-b">
+                  <h3 className="flex items-center gap-2 text-lg font-display font-bold">
+                    {r.name}
+                  </h3>
                 </div>
-              </CardContent>
-              <div className="p-4 border-t bg-card/50">
-                 <Button asChild size="sm" className="w-full">
-                   <Link to="/restaurants/$id" params={{ id: r.id }}>Lokantaya Git & Sipariş Ver</Link>
-                 </Button>
-              </div>
-            </Card>
+                <CardContent className="p-0 flex-1">
+                  <div className="divide-y divide-border/50">
+                    {r.menu_items?.slice(0, 5).map((m: any) => (
+                      <div key={m.id} className="flex justify-between items-center p-4 hover:bg-secondary/10 transition group">
+                        <div className="flex items-center gap-3">
+                          {m.image_url ? (
+                            <img src={m.image_url} alt={m.name} className="w-12 h-12 rounded-md object-cover shadow-sm bg-secondary/20" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-md bg-secondary/30 flex items-center justify-center">
+                              <UtensilsCrossed className="w-5 h-5 text-muted-foreground/50" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-sm group-hover:text-primary transition-colors">{m.name}</p>
+                            {m.description && <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{m.description}</p>}
+                          </div>
+                        </div>
+                        <div className="text-sm font-bold text-primary ml-4">₺{Number(m.price).toFixed(2)}</div>
+                      </div>
+                    ))}
+                    {r.menu_items && r.menu_items.length > 5 && (
+                      <div className="p-3 text-center text-xs font-medium text-primary bg-primary/5 hover:bg-primary/10 transition-colors">
+                        +{r.menu_items.length - 5} ürün daha (Sipariş vermek için tıkla)
+                      </div>
+                    )}
+                    {(!r.menu_items || r.menu_items.length === 0) && (
+                      <div className="p-6 text-sm text-muted-foreground text-center italic">Menü yakında eklenecek...</div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
           {restaurants.length === 0 && (
             <div className="col-span-full py-12 text-center text-muted-foreground border rounded-xl border-dashed">
