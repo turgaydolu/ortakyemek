@@ -5,9 +5,10 @@ import { AppShell } from "../components/AppShell";
 import { RequireAuth } from "../lib/auth-guard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { Store, Flame, Banknote, CalendarClock, Target, Users, Download } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { Store, Download, CalendarClock, Target, Users, Trash2, XCircle } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/reports")({
   head: () => ({ meta: [{ title: "Ciro & Raporlar — Ortak Yemek Admin" }] }),
@@ -18,6 +19,7 @@ function AdminReports() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [accounting, setAccounting] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<any[]>([]);
 
   useEffect(() => {
     loadData();
@@ -44,8 +46,8 @@ function AdminReports() {
     // Tüm Siparişler
     const { data: ordersData, error: ordersError } = await supabase
       .from("orders")
-      .select("*, restaurants ( name )")
-      .in("status", ["delivered", "preparing"]);
+      .select("*, restaurants(name), profiles!orders_user_id_fkey(full_name), stores(name)")
+      .order("created_at", { ascending: false });
 
     if (ordersError) {
       console.error("Orders error:", ordersError);
@@ -63,7 +65,8 @@ function AdminReports() {
     }
 
     const camps = campsData || [];
-    setCampaigns(camps.filter(c => ["active", "reached", "confirmed"].includes(c.status)));
+    setCampaigns(camps.filter(c => ["active", "reached", "confirmed", "archived_confirmed"].includes(c.status)));
+    setOrders(ordersData || []);
 
     // Muhasebe Hesaplama (Lokanta Bazlı)
     const accMap: Record<string, any> = {};
@@ -85,9 +88,13 @@ function AdminReports() {
 
     // Normal sipariş ciroları ekle
     (ordersData || []).forEach(o => {
-      if (accMap[o.restaurant_id]) {
+      if (["delivered", "preparing", "approved", "pending"].includes(o.status) && accMap[o.restaurant_id]) {
         const rev = Number(o.total_amount);
         accMap[o.restaurant_id].normal_revenue += rev;
+        accMap[o.restaurant_id].total_revenue += rev;
+        accMap[o.restaurant_id].order_count += 1;
+      }
+    });
         accMap[o.restaurant_id].total_revenue += rev;
         accMap[o.restaurant_id].order_count += 1;
       }
@@ -95,6 +102,27 @@ function AdminReports() {
 
     setAccounting(Object.values(accMap).sort((a, b) => b.total_revenue - a.total_revenue));
     setLoading(false);
+  };
+
+  const cancelOrder = async (id: string) => {
+    if (!confirm("Bu siparişi iptal etmek istediğinize emin misiniz? Cirodan düşecektir.")) return;
+    const { error } = await supabase.from("orders").update({ status: "cancelled" }).eq("id", id);
+    if (error) toast.error("Hata: " + error.message);
+    else { toast.success("Sipariş iptal edildi"); loadData(); }
+  };
+
+  const cancelCampaign = async (id: string) => {
+    if (!confirm("Tüm kampanyayı iptal etmek istediğinize emin misiniz? Tüm katılımcıların siparişi iptal olacak ve cirodan düşecektir.")) return;
+    const { error } = await supabase.from("campaigns").update({ status: "archived_cancelled" }).eq("id", id);
+    if (error) toast.error("Hata: " + error.message);
+    else { toast.success("Kampanya iptal edildi"); loadData(); }
+  };
+
+  const removeParticipant = async (p_id: string) => {
+    if (!confirm("Bu kişinin katılımını silmek istediğinize emin misiniz? Sadece bu kişi cirodan düşecektir.")) return;
+    const { error } = await supabase.from("campaign_participants").delete().eq("id", p_id);
+    if (error) toast.error("Hata: " + error.message);
+    else { toast.success("Katılımcı silindi"); loadData(); }
   };
 
   const fmtCurrency = (val: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(val);
@@ -129,9 +157,10 @@ function AdminReports() {
   return (
     <AppShell title="Ciro & Raporlar">
       <Tabs defaultValue="accounting" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
           <TabsTrigger value="accounting">Ciro Takibi</TabsTrigger>
           <TabsTrigger value="campaigns">Tüm Kampanyalar</TabsTrigger>
+          <TabsTrigger value="orders">Normal Siparişler</TabsTrigger>
         </TabsList>
 
         <TabsContent value="accounting" className="space-y-4">
@@ -195,7 +224,12 @@ function AdminReports() {
                         <CardTitle className="text-lg">{c.title}</CardTitle>
                         <CardDescription>{c.item_name} — {fmtCurrency(c.price)}</CardDescription>
                       </div>
-                      <Badge variant="outline" className="capitalize">{c.status}</Badge>
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge variant="outline" className="capitalize">{c.status}</Badge>
+                        <Button variant="ghost" size="sm" onClick={() => cancelCampaign(c.id)} className="text-destructive h-7 px-2 text-xs">
+                          <XCircle className="h-3.5 w-3.5 mr-1" /> Kampanyayı İptal Et
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-4 flex-1">
@@ -217,12 +251,17 @@ function AdminReports() {
                       ) : (
                         <div className="space-y-1">
                           {parts.map((p: any, i: number) => (
-                            <div key={p.id || i} className="flex justify-between text-sm border-b border-border/50 last:border-0 pb-1 last:pb-0">
+                            <div key={p.id || i} className="flex justify-between items-center text-sm border-b border-border/50 last:border-0 pb-1 last:pb-0">
                               <div>
                                 <span className="font-medium text-primary">{p.profiles?.full_name ?? "Bilinmeyen Personel"}</span>
                                 <span className="text-xs text-muted-foreground ml-1">({p.stores?.name ?? "Mağaza Yok"})</span>
                               </div>
-                              <span className="font-bold">{p.quantity || 1} Adet</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold">{p.quantity || 1} Adet</span>
+                                <Button variant="ghost" size="sm" onClick={() => removeParticipant(p.id)} className="h-6 w-6 p-0 text-destructive rounded-full hover:bg-destructive/10">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -232,6 +271,35 @@ function AdminReports() {
                 </Card>
               );
             })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="orders" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {orders.map(o => (
+              <Card key={o.id} className="shadow-soft">
+                <CardHeader className="pb-3 border-b bg-secondary/10">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="text-xs font-semibold text-primary mb-1">{o.restaurants?.name}</div>
+                      <CardTitle className="text-md">{o.profiles?.full_name || "Müşteri"}</CardTitle>
+                      <CardDescription className="text-xs">{o.stores?.name || "Mağaza"}</CardDescription>
+                    </div>
+                    <Badge variant={o.status === "cancelled" ? "destructive" : "outline"} className="capitalize">{o.status}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-2">
+                  <div className="text-sm font-medium">{fmtCurrency(o.total_amount)}</div>
+                  <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("tr-TR")}</div>
+                  {o.status !== "cancelled" && o.status !== "rejected" && (
+                    <Button variant="outline" size="sm" onClick={() => cancelOrder(o.id)} className="w-full mt-2 text-destructive border-destructive/30 hover:bg-destructive/10">
+                      Siparişi İptal Et (Cirodan Düş)
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+            {orders.length === 0 && <div className="text-muted-foreground py-8">Sipariş bulunamadı.</div>}
           </div>
         </TabsContent>
       </Tabs>
