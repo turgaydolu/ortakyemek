@@ -37,7 +37,7 @@ function Page() {
     supabase.from("campaigns")
       .select("*, campaign_participants(id, quantity, stores(name), selected_delivery_time, profiles!fk_campaign_participants_profiles(full_name))")
       .eq("restaurant_id", profile.restaurant_id)
-      .in("status", ["active", "reached", "confirmed", "cancelled"])
+      .in("status", ["active", "reached", "confirmed"])
       .order("created_at", { ascending: false })
       .then(({ data }) => setCamps(data ?? []));
       
@@ -274,8 +274,11 @@ function Page() {
       ) : (
         <div className="grid gap-4 grid-cols-1">
           {camps.map((c) => {
-            const pct = Math.min(100, (c.current_participants / c.target_participants) * 100);
             const ms = new Date(c.expires_at).getTime() - now;
+            // Hide campaigns that expired without reaching target (before CRON marks them as failed)
+            if (c.status === 'active' && ms <= 0 && c.current_participants < c.target_participants) return null;
+            
+            const pct = Math.min(100, (c.current_participants / c.target_participants) * 100);
             return (
               <Card key={c.id} className="shadow-soft">
                 <CardHeader>
