@@ -97,7 +97,7 @@ function Landing() {
       <main className="container mx-auto px-4">
         <section className="py-16 text-center lg:py-28 max-w-4xl mx-auto">
           <h1 className="mt-6 text-balance text-5xl font-display font-bold leading-[1.05] lg:text-7xl">
-            AVM'deki tüm lezzetler, <span className="text-primary">tek dokunuşta.</span>
+            AVM'deki çalışanlara tüm lezzetler en uygun fiyatlar ile <span className="text-primary">tek dokunuşta.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground lg:text-xl">
             Bireysel siparişten mağaza toplu siparişine, anlık indirim kampanyalarından grup açık artırmalarına — AVM personelinin yemek molasını kolaylaştırır.
