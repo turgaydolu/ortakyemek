@@ -3,8 +3,9 @@ import { type ReactNode, useEffect, useState } from "react";
 import { useAuth } from "../lib/auth-context";
 import { supabase } from "../integrations/supabase/client";
 import { Button } from "./ui/button";
-import { Bell, Flame, LogOut } from "lucide-react";
+import { Bell, Flame, LogOut, Menu } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "./ui/sheet";
 import { toast } from "sonner";
 
 interface Notif { id: string; title: string; body: string | null; created_at: string; read: boolean; link: string | null }
@@ -92,6 +93,28 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
             ))}
           </nav>
           <div className="flex items-center gap-2">
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[250px] sm:w-[300px]">
+                  <SheetHeader>
+                    <SheetTitle className="text-left font-display font-bold">Menü</SheetTitle>
+                  </SheetHeader>
+                  <nav className="flex flex-col gap-2 mt-6">
+                    {navItems.map((n) => (
+                      <SheetClose asChild key={n.to}>
+                        <Link to={n.to} className="rounded-lg px-3 py-3 text-base font-medium text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+                          activeProps={{ className: "rounded-lg px-3 py-3 text-base font-medium bg-secondary text-foreground" }}>
+                          {n.label}
+                        </Link>
+                      </SheetClose>
+                    ))}
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            </div>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative" onClick={markRead}>
