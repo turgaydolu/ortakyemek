@@ -49,7 +49,7 @@ function Page() {
 
   const openNew = (type?: "Ana Yemek" | "Diğer") => { 
     setEditing(null); 
-    setForm({ name: "", description: "", category: type === "Ana Yemek" ? "Ana Yemek" : "İçecek", price: "", combo_price: "", takeaway_price: "", mall_delivery_price: "", dine_in_price: "", available: true, image_url: "" }); 
+    setForm({ name: "", description: "", category: type === "Ana Yemek" ? "Ana Yemek" : "Diğer", price: "", combo_price: "", takeaway_price: "", mall_delivery_price: "", dine_in_price: "", available: true, image_url: "" }); 
     setOpen(true); 
   };
   const openEdit = (m: MI) => {
@@ -94,22 +94,33 @@ function Page() {
   };
 
   const save = async () => {
+    if (!profile?.restaurant_id) return;
+    
+    let finalName = form.name;
+    if (form.category === "Diğer" && (!finalName || finalName === "")) {
+      finalName = form.description ? (form.description.split(" ").slice(0, 3).join(" ") + "...") : "Diğer Ürün";
+    }
+
     const fallbackPrice = form.price || form.dine_in_price || form.takeaway_price || form.mall_delivery_price;
-    if (!profile?.restaurant_id || !form.name || !fallbackPrice) { toast.error("İsim ve en az bir fiyat zorunlu"); return; }
+    if (!finalName || !fallbackPrice) { toast.error("İsim ve en az bir fiyat zorunlu"); return; }
+    
     const payload: any = {
       restaurant_id: profile.restaurant_id,
-      name: form.name, description: form.description || null, category: form.category || null,
+      name: finalName, 
+      description: form.description || null, 
+      category: form.category || null,
       price: Number(fallbackPrice),
-      combo_price: null,
       takeaway_price: form.takeaway_price ? Number(form.takeaway_price) : null,
       mall_delivery_price: form.mall_delivery_price ? Number(form.mall_delivery_price) : null,
       dine_in_price: form.dine_in_price ? Number(form.dine_in_price) : null,
       available: form.available,
-      image_url: form.image_url || null,
+      image_url: form.category === "Diğer" ? null : (form.image_url || null),
     };
+    
     const { error } = editing
       ? await supabase.from("menu_items").update(payload).eq("id", editing.id)
       : await supabase.from("menu_items").insert(payload);
+      
     if (error) toast.error(error.message);
     else { toast.success("Kaydedildi"); setOpen(false); load(); }
   };
@@ -148,31 +159,37 @@ function Page() {
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editing ? "Ürünü Düzenle" : "Yeni Ürün"}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label>Ad</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div><Label>Açıklama</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} /></div>
-              <div>
-                <Label>Kategori</Label>
-                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                  <SelectTrigger><SelectValue placeholder="Kategori seçin" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Ana Yemek">Ana Yemek</SelectItem>
-                    <SelectItem value="İçecek">İçecek</SelectItem>
-                    <SelectItem value="Salata">Salata</SelectItem>
-                    <SelectItem value="Ekmek">Ekmek</SelectItem>
-                    <SelectItem value="Garnitür">Garnitür</SelectItem>
-                    <SelectItem value="Tatlı">Tatlı</SelectItem>
-                    <SelectItem value="Diğer">Diğer</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Ürün Resmi (JPEG olarak sıkıştırılır)</Label>
-                <div className="flex items-center gap-4 mt-1">
-                  {form.image_url && <img src={form.image_url} alt="Önizleme" className="h-12 w-12 rounded object-cover border" />}
-                  <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploading} className="flex-1" />
-                </div>
-                {isUploading && <p className="text-xs text-muted-foreground mt-1">Resim sıkıştırılıyor ve yükleniyor...</p>}
-              </div>
+              {form.category !== "Diğer" && (
+                <div><Label>Ad</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              )}
+              <div><Label>{form.category === "Diğer" ? "Ürün Açıklaması / Detay" : "Açıklama"}</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} /></div>
+              {form.category !== "Diğer" && (
+                <>
+                  <div>
+                    <Label>Kategori</Label>
+                    <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                      <SelectTrigger><SelectValue placeholder="Kategori seçin" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Ana Yemek">Ana Yemek</SelectItem>
+                        <SelectItem value="İçecek">İçecek</SelectItem>
+                        <SelectItem value="Salata">Salata</SelectItem>
+                        <SelectItem value="Ekmek">Ekmek</SelectItem>
+                        <SelectItem value="Garnitür">Garnitür</SelectItem>
+                        <SelectItem value="Tatlı">Tatlı</SelectItem>
+                        <SelectItem value="Diğer">Diğer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Ürün Resmi (JPEG olarak sıkıştırılır)</Label>
+                    <div className="flex items-center gap-4 mt-1">
+                      {form.image_url && <img src={form.image_url} alt="Önizleme" className="h-12 w-12 rounded object-cover border" />}
+                      <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploading} className="flex-1" />
+                    </div>
+                    {isUploading && <p className="text-xs text-muted-foreground mt-1">Resim sıkıştırılıyor ve yükleniyor...</p>}
+                  </div>
+                </>
+              )}
               <div className="grid grid-cols-2 gap-2">
                 <div><Label>Adrese Teslim ₺</Label><Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
                 <div><Label>AVM İçi ₺</Label><Input type="number" step="0.01" value={form.mall_delivery_price} onChange={(e) => setForm({ ...form, mall_delivery_price: e.target.value })} /></div>
