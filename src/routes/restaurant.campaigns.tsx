@@ -197,15 +197,18 @@ function Page() {
             <DialogHeader><DialogTitle>Yeni Grup Kampanyası</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div>
-                <Label>Mevcut Menüden Seç (İsteğe Bağlı)</Label>
-                <Select onValueChange={(id) => {
+                <Label>Menüden Ürün(ler) Ekle</Label>
+                <Select value="" onValueChange={(id) => {
                   const m = menuItems.find(x => x.id === id);
                   if (m) {
                     const basePrice = m.price || m.dine_in_price || m.takeaway_price || m.mall_delivery_price || 0;
-                    setForm({ ...form, title: m.name + " Kampanyası", item_name: m.name, price: String(basePrice), description: m.description || "", image_url: m.image_url || "", delivery_time_2: form.delivery_time_2 });
+                    const newPrice = form.price ? (Number(form.price) + basePrice).toString() : String(basePrice);
+                    const newItemName = form.item_name ? `${form.item_name} + ${m.name}` : m.name;
+                    const newTitle = newItemName.length > 30 ? "Özel Karışık Menü Kampanyası" : `${newItemName} Kampanyası`;
+                    setForm({ ...form, title: newTitle, item_name: newItemName, price: newPrice, image_url: form.image_url || m.image_url || "" });
                   }
                 }}>
-                  <SelectTrigger><SelectValue placeholder="Menüden bir ürün seçin veya manuel girin" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Bir veya daha fazla ürün seçin..." /></SelectTrigger>
                   <SelectContent>
                     {menuItems.map(m => (
                       <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
