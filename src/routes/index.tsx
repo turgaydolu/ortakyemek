@@ -24,6 +24,7 @@ function Landing() {
   const navigate = useNavigate();
 
   const [camps, setCamps] = useState<any[]>([]);
+  const [restaurants, setRestaurants] = useState<any[]>([]);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -59,6 +60,13 @@ function Landing() {
         });
         setCamps(filtered.slice(0, 6));
       });
+
+    supabase.from("restaurants")
+      .select("id, name, menu_items(id, name, description, price)")
+      .then(({ data }) => {
+        if (data) setRestaurants(data);
+      });
+
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
@@ -201,19 +209,53 @@ function Landing() {
           </div>
         </section>
 
-        <section className="grid gap-6 py-12 md:grid-cols-2 max-w-4xl mx-auto">
-          {[
-            { icon: Users, title: "Personel", desc: "Bireysel sipariş ver, mağaza arkadaşlarınla toplu sipariş yap, kampanyalara katıl." },
-            { icon: UtensilsCrossed, title: "Lokanta", desc: "Menünü ve fiyatlarını yönet, kampanya başlat, gelen siparişleri onayla." },
-          ].map((f) => (
-            <div key={f.title} className="rounded-2xl border bg-card p-6 shadow-soft transition hover:shadow-warm">
-              <div className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-primary text-primary-foreground">
-                <f.icon className="h-6 w-6" />
+        <section className="py-12 max-w-6xl mx-auto">
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-display font-bold">Lokantalarımız ve Menüleri</h2>
+            <p className="mt-2 text-muted-foreground">Fiyatları görmek ve sipariş vermek için giriş yapın.</p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {restaurants.map(r => (
+              <Card key={r.id} className="shadow-soft flex flex-col overflow-hidden transition hover:shadow-warm">
+                <CardHeader className="bg-gradient-to-r from-secondary/40 to-secondary/10 pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg font-display">
+                    <Store className="h-5 w-5 text-primary" /> {r.name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 flex-1">
+                  <div className="divide-y divide-border/50">
+                    {r.menu_items?.slice(0, 5).map((m: any) => (
+                      <div key={m.id} className="flex justify-between items-center p-4 hover:bg-secondary/5 transition">
+                        <div>
+                          <p className="font-medium text-sm">{m.name}</p>
+                          {m.description && <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{m.description}</p>}
+                        </div>
+                        <div className="text-sm font-bold text-muted-foreground blur-[4px] select-none ml-4">₺99.99</div>
+                      </div>
+                    ))}
+                    {r.menu_items && r.menu_items.length > 5 && (
+                      <div className="p-3 text-center text-xs font-medium text-primary bg-primary/5">
+                        +{r.menu_items.length - 5} ürün daha
+                      </div>
+                    )}
+                    {(!r.menu_items || r.menu_items.length === 0) && (
+                      <div className="p-6 text-sm text-muted-foreground text-center italic">Menü yakında eklenecek...</div>
+                    )}
+                  </div>
+                </CardContent>
+                <div className="p-4 border-t bg-card/50">
+                   <Button asChild size="sm" variant="outline" className="w-full">
+                     <Link to="/auth">Menünün Tamamını Gör</Link>
+                   </Button>
+                </div>
+              </Card>
+            ))}
+            {restaurants.length === 0 && (
+              <div className="col-span-full py-12 text-center text-muted-foreground border rounded-xl border-dashed">
+                Şu an listelenecek lokanta bulunmuyor.
               </div>
-              <h3 className="mt-4 font-display text-xl font-semibold">{f.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{f.desc}</p>
-            </div>
-          ))}
+            )}
+          </div>
         </section>
       </main>
 
