@@ -65,7 +65,10 @@ function Page() {
     try {
       const img = new Image();
       img.src = URL.createObjectURL(file);
-      await new Promise(r => img.onload = r);
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error("Resim formatı desteklenmiyor veya dosya bozuk."));
+      });
       
       const canvas = document.createElement("canvas");
       let { width, height } = img;
@@ -186,7 +189,7 @@ function Page() {
                 <Label>Ürün Resmi (JPEG olarak sıkıştırılır)</Label>
                 <div className="flex items-center gap-4 mt-1">
                   {form.image_url && <img src={form.image_url} alt="Önizleme" className="h-12 w-12 rounded object-cover border" />}
-                  <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploading} className="flex-1" />
+                  <Input type="file" accept="image/jpeg, image/png, image/webp" onChange={handleImageUpload} disabled={isUploading} className="flex-1" />
                 </div>
                 {isUploading && <p className="text-xs text-muted-foreground mt-1">Resim sıkıştırılıyor ve yükleniyor...</p>}
               </div>
