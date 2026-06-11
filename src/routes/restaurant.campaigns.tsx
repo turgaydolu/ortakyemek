@@ -28,7 +28,7 @@ function Page() {
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_hours: "24", free_delivery: true, delivery_date: "", delivery_time: "", delivery_time_2: "", image_url: "", delivery_method: "mall_delivery" });
+  const [form, setForm] = useState({ title: "", description: "", item_name: "", price: "", target_participants: "10", duration_hours: "24", free_delivery: true, delivery_date: "", delivery_time: "", delivery_time_2: "", image_url: "", delivery_method: "mall_delivery_today" });
   const [now, setNow] = useState(Date.now());
   const [restaurantSettings, setRestaurantSettings] = useState<any>(null);
 
@@ -62,11 +62,23 @@ function Page() {
     const expires = new Date(Date.now() + Number(form.duration_hours) * 3600000).toISOString();
     let delivery_time = null;
     let delivery_time_2 = null;
-    if (form.delivery_date && form.delivery_time) {
-      delivery_time = new Date(`${form.delivery_date}T${form.delivery_time}`).toISOString();
+    let computedDate = form.delivery_date;
+    let finalMethod = form.delivery_method;
+
+    if (finalMethod.endsWith("_today")) {
+      finalMethod = finalMethod.replace("_today", "");
+      computedDate = new Date().toISOString().split('T')[0];
+    } else if (finalMethod.endsWith("_tomorrow")) {
+      finalMethod = finalMethod.replace("_tomorrow", "");
+      const tmrw = new Date(); tmrw.setDate(tmrw.getDate() + 1);
+      computedDate = tmrw.toISOString().split('T')[0];
     }
-    if (form.delivery_date && form.delivery_time_2) {
-      delivery_time_2 = new Date(`${form.delivery_date}T${form.delivery_time_2}`).toISOString();
+
+    if (computedDate && form.delivery_time) {
+      delivery_time = new Date(`${computedDate}T${form.delivery_time}`).toISOString();
+    }
+    if (computedDate && form.delivery_time_2) {
+      delivery_time_2 = new Date(`${computedDate}T${form.delivery_time_2}`).toISOString();
     }
 
     const { data: c, error } = await supabase.from("campaigns").insert({
@@ -80,7 +92,7 @@ function Page() {
       free_delivery: form.free_delivery,
       delivery_time,
       delivery_time_2,
-      delivery_method: form.delivery_method,
+      delivery_method: finalMethod,
       image_url: form.image_url || null
     }).select().single();
     if (error) { toast.error(error.message); return; }
@@ -218,22 +230,30 @@ function Page() {
                 <div><Label>Süre (Saat)</Label><Input type="number" value={form.duration_hours} onChange={(e) => setForm({...form, duration_hours: e.target.value})} /></div>
               </div>
               <div className="grid gap-4 rounded-lg border bg-secondary/20 p-3 sm:grid-cols-3">
-                <div><Label>İleri Tarihli Sipariş (Tarih)</Label><Input type="date" value={form.delivery_date} onChange={(e) => setForm({...form, delivery_date: e.target.value})} /></div>
+                {(!form.delivery_method.endsWith("_today") && !form.delivery_method.endsWith("_tomorrow")) && (
+                  <div><Label>Özel Tarih (İsteğe Bağlı)</Label><Input type="date" value={form.delivery_date} onChange={(e) => setForm({...form, delivery_date: e.target.value})} /></div>
+                )}
                 <div><Label>1. Teslimat Saati</Label><Input type="time" value={form.delivery_time} onChange={(e) => setForm({...form, delivery_time: e.target.value})} /></div>
                 <div><Label>2. Teslimat Saati (İsteğe Bağlı)</Label><Input type="time" value={form.delivery_time_2} onChange={(e) => setForm({...form, delivery_time_2: e.target.value})} /></div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label>Teslimat Türü</Label>
+                  <Label>Teslimat Türü ve Günü</Label>
                   <Select value={form.delivery_method} onValueChange={(v) => setForm({...form, delivery_method: v})}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="mall_delivery">🛵 AVM İçi Teslimat</SelectItem>
+                      <SelectItem value="mall_delivery_today">🛵 Bugün Teslim</SelectItem>
+                      <SelectItem value="mall_delivery_tomorrow">🛵 Yarın Teslim</SelectItem>
+                      <SelectItem value="mall_delivery">🛵 AVM İçi Teslimat (Özel Tarih)</SelectItem>
                       {restaurantSettings?.allow_takeaway !== false && (
-                        <SelectItem value="takeaway">🛍️ Gel Al (Yarın Gel Al)</SelectItem>
+                        <>
+                          <SelectItem value="takeaway_today">🛍️ Bugün Gel Al</SelectItem>
+                          <SelectItem value="takeaway_tomorrow">🛍️ Yarın Gel Al</SelectItem>
+                          <SelectItem value="takeaway">🛍️ Gel Al (Özel Tarih)</SelectItem>
+                        </>
                       )}
                       {restaurantSettings?.allow_dine_in !== false && (
-                        <SelectItem value="dine_in">🍽️ Masaya Servis</SelectItem>
+                        <SelectItem value="dine_in_today">🍽️ Masaya Servis (Bugün)</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
