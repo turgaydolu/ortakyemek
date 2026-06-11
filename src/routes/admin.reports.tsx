@@ -95,10 +95,6 @@ function AdminReports() {
         accMap[o.restaurant_id].order_count += 1;
       }
     });
-        accMap[o.restaurant_id].total_revenue += rev;
-        accMap[o.restaurant_id].order_count += 1;
-      }
-    });
 
     setAccounting(Object.values(accMap).sort((a, b) => b.total_revenue - a.total_revenue));
     setLoading(false);
