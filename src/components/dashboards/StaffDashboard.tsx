@@ -121,15 +121,15 @@ export function StaffDashboard() {
   ));
 
   const submitOrder = async () => {
-    if (!profile || !cartRestId || !currentRest) return;
+    if (!profile || !user || !cartRestId || !currentRest) return;
     if (orderType === "group" && !profile.store_id) return toast.error("Mağazanız yok");
     
     setBusy(true);
     try {
       const { data: order, error } = await supabase.from("orders").insert({
-        user_id: profile.id,
+        user_id: user.id,
         restaurant_id: cartRestId,
-        store_id: profile.store_id,
+        store_id: profile.store_id || null,
         order_type: orderType,
         delivery_method: delivery,
         payment_method: payment as any,
