@@ -21,6 +21,7 @@ export function StaffDashboard() {
   const [myOrders, setMyOrders] = useState(0);
 
   const [liveCamps, setLiveCamps] = useState<any[]>([]);
+  const [restaurants, setRestaurants] = useState<any[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<any | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [joined, setJoined] = useState<Set<string>>(new Set());
@@ -30,16 +31,18 @@ export function StaffDashboard() {
 
   const loadDashboard = async () => {
     if (!user) return;
-    const [r, c, o, camps] = await Promise.all([
+    const [r, c, o, camps, rests] = await Promise.all([
       supabase.from("restaurants").select("id", { count: "exact", head: true }).eq("status", "open"),
       supabase.from("campaigns").select("id", { count: "exact", head: true }).eq("status", "active"),
       supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("campaigns").select("*, restaurants(name, owner_id), campaign_participants(quantity)").in("status", ["active", "reached", "confirmed"]).order("expires_at").limit(6),
+      supabase.from("restaurants").select("id, name, menu_items(id, name, description, price)").eq("status", "open"),
     ]);
     setOpenRests(r.count ?? 0);
     setActiveCampaigns(c.count ?? 0);
     setMyOrders(o.count ?? 0);
     setLiveCamps(camps.data ?? []);
+    setRestaurants(rests.data ?? []);
 
     if (user) {
       const { data: p } = await supabase.from("campaign_participants").select("campaign_id").eq("user_id", user.id);
@@ -260,6 +263,55 @@ export function StaffDashboard() {
             })}
           </div>
         )}
+      </div>
+
+      <div className="mt-12">
+        <h2 className="text-xl font-display font-bold flex items-center gap-2 mb-4">
+          <UtensilsCrossed className="text-primary h-5 w-5" /> 
+          Lokantalarımız ve Menüleri
+        </h2>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {restaurants.map(r => (
+            <Card key={r.id} className="shadow-soft flex flex-col overflow-hidden transition hover:shadow-warm">
+              <div className="bg-gradient-to-r from-secondary/40 to-secondary/10 px-5 py-4 border-b">
+                <h3 className="flex items-center gap-2 text-lg font-display font-bold">
+                  {r.name}
+                </h3>
+              </div>
+              <CardContent className="p-0 flex-1">
+                <div className="divide-y divide-border/50">
+                  {r.menu_items?.slice(0, 5).map((m: any) => (
+                    <div key={m.id} className="flex justify-between items-center p-4 hover:bg-secondary/5 transition">
+                      <div>
+                        <p className="font-medium text-sm">{m.name}</p>
+                        {m.description && <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{m.description}</p>}
+                      </div>
+                      <div className="text-sm font-bold text-primary ml-4">₺{Number(m.price).toFixed(2)}</div>
+                    </div>
+                  ))}
+                  {r.menu_items && r.menu_items.length > 5 && (
+                    <div className="p-3 text-center text-xs font-medium text-primary bg-primary/5">
+                      +{r.menu_items.length - 5} ürün daha
+                    </div>
+                  )}
+                  {(!r.menu_items || r.menu_items.length === 0) && (
+                    <div className="p-6 text-sm text-muted-foreground text-center italic">Menü yakında eklenecek...</div>
+                  )}
+                </div>
+              </CardContent>
+              <div className="p-4 border-t bg-card/50">
+                 <Button asChild size="sm" className="w-full">
+                   <Link to="/restaurants/$id" params={{ id: r.id }}>Lokantaya Git & Sipariş Ver</Link>
+                 </Button>
+              </div>
+            </Card>
+          ))}
+          {restaurants.length === 0 && (
+            <div className="col-span-full py-12 text-center text-muted-foreground border rounded-xl border-dashed">
+              Şu an açık lokanta bulunmuyor.
+            </div>
+          )}
+        </div>
       </div>
 
       <Dialog open={!!selectedCampaign} onOpenChange={(open) => !open && setSelectedCampaign(null)}>
