@@ -114,7 +114,7 @@ function Page() {
       mall_delivery_price: form.mall_delivery_price ? Number(form.mall_delivery_price) : null,
       dine_in_price: form.dine_in_price ? Number(form.dine_in_price) : null,
       available: form.available,
-      image_url: form.category === "Diğer" ? null : (form.image_url || null),
+      image_url: form.image_url || null,
     };
     
     const { error } = editing
@@ -180,16 +180,16 @@ function Page() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label>Ürün Resmi (JPEG olarak sıkıştırılır)</Label>
-                    <div className="flex items-center gap-4 mt-1">
-                      {form.image_url && <img src={form.image_url} alt="Önizleme" className="h-12 w-12 rounded object-cover border" />}
-                      <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploading} className="flex-1" />
-                    </div>
-                    {isUploading && <p className="text-xs text-muted-foreground mt-1">Resim sıkıştırılıyor ve yükleniyor...</p>}
-                  </div>
                 </>
               )}
+              <div>
+                <Label>Ürün Resmi (JPEG olarak sıkıştırılır)</Label>
+                <div className="flex items-center gap-4 mt-1">
+                  {form.image_url && <img src={form.image_url} alt="Önizleme" className="h-12 w-12 rounded object-cover border" />}
+                  <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploading} className="flex-1" />
+                </div>
+                {isUploading && <p className="text-xs text-muted-foreground mt-1">Resim sıkıştırılıyor ve yükleniyor...</p>}
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <div><Label>Adrese Teslim ₺</Label><Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
                 <div><Label>AVM İçi ₺</Label><Input type="number" step="0.01" value={form.mall_delivery_price} onChange={(e) => setForm({ ...form, mall_delivery_price: e.target.value })} /></div>
