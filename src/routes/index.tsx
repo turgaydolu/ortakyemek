@@ -5,6 +5,7 @@ import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Progress } from "../components/ui/progress";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "../components/ui/hover-card";
 import { UtensilsCrossed, Users, Store, Flame, BellRing, Timer, ShieldCheck, CalendarClock } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -62,7 +63,8 @@ function Landing() {
       });
 
     supabase.from("restaurants")
-      .select("id, name, menu_items(id, name, description, price)")
+      .select("id, name, menu_items(id, name, description, price, image_url)")
+      .eq("status", "open")
       .then(({ data }) => {
         if (data) setRestaurants(data);
       });
@@ -223,21 +225,34 @@ function Landing() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 flex-1">
-                  <div className="divide-y divide-border/50">
-                    {r.menu_items?.slice(0, 5).map((m: any) => (
-                      <div key={m.id} className="flex justify-between items-center p-4 hover:bg-secondary/5 transition">
-                        <div>
-                          <p className="font-medium text-sm">{m.name}</p>
-                          {m.description && <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{m.description}</p>}
+                  <div className="max-h-[360px] overflow-y-auto divide-y divide-border/50 custom-scrollbar">
+                    {r.menu_items?.map((m: any) => (
+                      <Link key={m.id} to="/restaurants/$id" params={{ id: r.id }} className="flex justify-between items-center p-4 hover:bg-secondary/10 transition group">
+                        <div className="flex items-center gap-3 pr-4">
+                          {m.image_url ? (
+                            <HoverCard openDelay={200} closeDelay={100}>
+                              <HoverCardTrigger asChild>
+                                <div className="relative cursor-zoom-in" onClick={(e) => e.stopPropagation()}>
+                                  <img src={m.image_url} alt={m.name} className="w-12 h-12 min-w-12 rounded-md object-cover shadow-sm bg-secondary/20 transition-transform group-hover:scale-105" />
+                                </div>
+                              </HoverCardTrigger>
+                              <HoverCardContent side="right" align="center" sideOffset={10} className="w-auto p-1 z-[100] shadow-2xl border-0 overflow-hidden rounded-xl bg-black/5 backdrop-blur-sm animate-in fade-in zoom-in-95">
+                                <img src={m.image_url} alt={m.name} className="w-[280px] h-[280px] object-cover rounded-lg shadow-xl" />
+                              </HoverCardContent>
+                            </HoverCard>
+                          ) : (
+                            <div className="w-12 h-12 rounded-md bg-secondary/30 flex min-w-12 items-center justify-center">
+                              <UtensilsCrossed className="w-5 h-5 text-muted-foreground/50" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-sm group-hover:text-primary transition-colors">{m.name}</p>
+                            {m.description && <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{m.description}</p>}
+                          </div>
                         </div>
-                        <div className="text-sm font-bold text-muted-foreground blur-[4px] select-none ml-4">₺99.99</div>
-                      </div>
+                        <div className="text-sm font-bold text-muted-foreground blur-[4px] select-none ml-4 transition-all group-hover:blur-[2px]">₺99.99</div>
+                      </Link>
                     ))}
-                    {r.menu_items && r.menu_items.length > 5 && (
-                      <div className="p-3 text-center text-xs font-medium text-primary bg-primary/5">
-                        +{r.menu_items.length - 5} ürün daha
-                      </div>
-                    )}
                     {(!r.menu_items || r.menu_items.length === 0) && (
                       <div className="p-6 text-sm text-muted-foreground text-center italic">Menü yakında eklenecek...</div>
                     )}
